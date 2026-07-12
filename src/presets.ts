@@ -39,9 +39,8 @@ function formatHsts(options: boolean | HstsOptions): string | undefined {
   return parts.join("; ");
 }
 
-/** Allow any origin to fetch matching assets (fonts, images, etc). Pass a
- * narrower `path` (default `/*`) to scope it, e.g. `/assets/*`. */
-export function corsPreset(path = "/*"): HeaderRule {
+/** Allow any origin to fetch matching assets (fonts, images, etc) under the specified `path`. */
+export function corsPreset(path: string): HeaderRule {
   return {
     path,
     comment: "Allow cross-origin fetches of these assets.",

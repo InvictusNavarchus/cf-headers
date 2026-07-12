@@ -83,9 +83,9 @@ describe("permissionsPolicy", () => {
 });
 
 describe("presets", () => {
-  it("corsPreset defaults to '/*' and allows any origin", () => {
-    const p = corsPreset();
-    expect(p.path).toBe("/*");
+  it("corsPreset sets Access-Control-Allow-Origin: * for the given path", () => {
+    const p = corsPreset("/assets/*");
+    expect(p.path).toBe("/assets/*");
     expect(p.headers["Access-Control-Allow-Origin"]).toBe("*");
   });
 
