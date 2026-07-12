@@ -3,6 +3,7 @@ import {
   defineConfig,
   immutableAssetsPreset,
   noIndexPreviewDomainPreset,
+  rule,
   securityHeadersPreset,
 } from "cf-headers";
 
@@ -13,12 +14,10 @@ export default defineConfig({
     immutableAssetsPreset("/assets/*"),
     corsPreset("/fonts/*"),
     noIndexPreviewDomainPreset("https://:project.pages.dev/*"),
-    {
-      path: "/api/*",
-      comment: "API responses should never be cached by the browser.",
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    },
+    rule(
+      "/api/*",
+      { "Cache-Control": "no-store" },
+      "API responses should never be cached by the browser.",
+    )
   ],
 });
