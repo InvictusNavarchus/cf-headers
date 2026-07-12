@@ -26,6 +26,20 @@ Type-safe `_headers` file generator for **Cloudflare Pages** and **Workers stati
 npm install --save-dev cf-headers
 ```
 
+### Peer Dependencies (Optional)
+
+`cf-headers` is designed to be completely tool-agnostic with zero required runtime dependencies. Depending on your setup, you can install the following optional peer dependencies:
+
+* **For the Vite Plugin (`cf-headers/vite`)**: Make sure you have `vite` installed in your project:
+  ```bash
+  npm install --save-dev vite
+  ```
+* **For TypeScript Config Files (`cf-headers.config.ts` / `.mts`)**: The CLI uses `esbuild` to compile your configuration file in-memory. If your project uses Vite (or SvelteKit, Astro, Remix, etc.), `esbuild` is already installed transitively. Otherwise, install it locally:
+  ```bash
+  npm install --save-dev esbuild
+  ```
+  *(Note: If you use a JavaScript configuration file like `cf-headers.config.js` or `.mjs`, no transpiler is required and you do not need to install `esbuild` at all).*
+
 ## Quick start
 
 **1. Create a config file** (`cf-headers.config.ts`) at your project root:
@@ -239,8 +253,9 @@ Options for build:
   --no-strict           Only warn on validation issues instead of failing
 ```
 
-`.ts` config files are transpiled on the fly (via esbuild) — no `ts-node`,
-`tsx`, or extra build step required.
+`.ts` config files are transpiled on the fly. The CLI will dynamically resolve a local installation of `esbuild` (which is typically already present transitively in Vite-based projects, or can be installed via `npm install --save-dev esbuild`). 
+
+If you prefer a zero-dependency setup, write your configuration file as a `.js` or `.mjs` file, which Node.js loads natively.
 
 ## What this package doesn't do
 
