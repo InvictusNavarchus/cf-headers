@@ -69,34 +69,6 @@ function formatHsts(options: boolean | HstsOptions): string | undefined {
 	return parts.join('; ');
 }
 
-const PRESET_KEYS = [
-	'csp',
-	'hsts',
-	'permissions',
-	'coop',
-	'coep',
-	'corp',
-	'xFrameOptions',
-] as const satisfies readonly (keyof SecurityHeadersPresetOptions)[];
-
-// Compile-time check to ensure all keys of SecurityHeadersPresetOptions are represented in PRESET_KEYS
-type PresetKeysExhaustive = [keyof SecurityHeadersPresetOptions] extends [
-	(typeof PRESET_KEYS)[number],
-]
-	? true
-	: never;
-const _exhaustiveCheck: PresetKeysExhaustive = true;
-
-function isSecurityHeadersPresetOptions(
-	options: CspOptions | SecurityHeadersPresetOptions,
-): options is SecurityHeadersPresetOptions {
-	const keys = Object.keys(options);
-	if (keys.length === 0) return true;
-
-	const presetKeysSet = new Set<string>(PRESET_KEYS);
-	return keys.some((key) => presetKeysSet.has(key));
-}
-
 /** Allow any origin to fetch matching assets (fonts, images, etc) under the specified `path`. */
 export function corsPreset(path: string): HeaderRule {
 	return {
@@ -189,65 +161,34 @@ function resolveCorp(
 }
 
 /**
- * A solid baseline of hardening headers for HTML/app routes.
- *
- * @deprecated Passing raw CspOptions directly as the second argument is deprecated and will be removed in the next major version (v1.0.0).
- * Please wrap your CSP options in the `csp` property, e.g. `securityHeadersPreset("/*", { csp: { ... } })`.
- */
-export function securityHeadersPreset(
-	path: string,
-	options: CspOptions,
-): HeaderRule;
-
-/**
  * A solid baseline of hardening headers for HTML/app routes. Pass
  * `options` to adjust CSP, HSTS, Permissions-Policy, COOP, COEP, or CORP.
  */
 export function securityHeadersPreset(
-	path?: string,
-	options?: SecurityHeadersPresetOptions,
-): HeaderRule;
-
-export function securityHeadersPreset(
 	path = '/*',
-	options: CspOptions | SecurityHeadersPresetOptions = {},
+	options: SecurityHeadersPresetOptions = {},
 ): HeaderRule {
-	let normalizedOpts: SecurityHeadersPresetOptions;
-
-	if (isSecurityHeadersPresetOptions(options)) {
-		normalizedOpts = options;
-	} else {
-		// Backward compatibility: the options object itself contains CSP overrides
-		normalizedOpts = { csp: options };
-		console.warn(
-			'cf-headers: Passing raw CspOptions directly as the second argument to securityHeadersPreset is deprecated. ' +
-				'Please wrap your CSP options in the `csp` property, e.g. securityHeadersPreset("/*", { csp: { ... } }).',
-		);
-	}
-
 	const headers: HeaderRule['headers'] = {
 		'X-Content-Type-Options': 'nosniff',
 		'Referrer-Policy': 'strict-origin-when-cross-origin',
-		'Content-Security-Policy': strictCsp(normalizedOpts.csp ?? {}),
+		'Content-Security-Policy': strictCsp(options.csp ?? {}),
 	};
 
-	const xfo = resolveXFrameOptions(normalizedOpts.xFrameOptions);
+	const xfo = resolveXFrameOptions(options.xFrameOptions);
 	if (xfo) headers['X-Frame-Options'] = xfo;
 
-	const hsts = resolveHsts(normalizedOpts.hsts);
+	const hsts = resolveHsts(options.hsts);
 	if (hsts) headers['Strict-Transport-Security'] = hsts;
 
-	headers['Permissions-Policy'] = resolvePermissionsPolicy(
-		normalizedOpts.permissions,
-	);
+	headers['Permissions-Policy'] = resolvePermissionsPolicy(options.permissions);
 
-	const coop = resolveCoop(normalizedOpts.coop);
+	const coop = resolveCoop(options.coop);
 	if (coop) headers['Cross-Origin-Opener-Policy'] = coop;
 
-	const coep = resolveCoep(normalizedOpts.coep);
+	const coep = resolveCoep(options.coep);
 	if (coep) headers['Cross-Origin-Embedder-Policy'] = coep;
 
-	const corp = resolveCorp(normalizedOpts.corp);
+	const corp = resolveCorp(options.corp);
 	if (corp) headers['Cross-Origin-Resource-Policy'] = corp;
 
 	return {

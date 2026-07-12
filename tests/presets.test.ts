@@ -264,10 +264,4 @@ describe('presets', () => {
 		const p3 = securityHeadersPreset('/*', { xFrameOptions: true });
 		expect(p3.headers['X-Frame-Options']).toBe('DENY');
 	});
-
-	it('securityHeadersPreset supports backward compatibility with raw CspOptions', () => {
-		const p = securityHeadersPreset('/*', { scriptSrc: ["'self'"] });
-		expect(p.headers['Content-Security-Policy']).toContain("script-src 'self'");
-		expect(p.headers['Strict-Transport-Security']).toBe('max-age=31536000');
-	});
 });
