@@ -50,6 +50,22 @@ cli
       console.error(`[cf-headers] Unknown command: ${command}`);
       cli.outputHelp();
       process.exitCode = 1;
-      return;
   }
   ```
+
+---
+
+## 3. CAC Documentation Gaps & Behavioral Quirks
+
+During implementation, we identified several gaps and undocumented behaviors in CAC's documentation:
+
+### Implicit Negation Support
+* **What the docs say:** The documentation suggests that to support negated boolean options (e.g. `--no-strict`), you must explicitly register `.option('--no-strict', '...')`.
+* **The Reality / Discrepancy:** Explicitly registering `--no-strict` forces the option value to default to `true` when omitted. If you want a three-state option (allowing `undefined` to fallback to config files), you should **only** register `.option('--strict', '...')`. CAC implicitly parses `--no-strict` to `false` without requiring explicit registration, keeping the default state `undefined`.
+
+### Default Command and Alias Interaction
+* **What the docs say:** The documentation shows default commands using variadic brackets (e.g. `cli.command('[...files]')`) and subcommand registration separately, but does not cover mixing them with aliases or custom routing logic.
+* **The Reality / Discrepancy:** Registering `.command('[command]').alias('build')` routes both the empty execution and the word `build` to the same action handler. However:
+  * For `cf-headers build`, the command parameter is matched to the alias and passed to the action as `undefined` (matching the empty execution).
+  * For unknown positionals (e.g. `cf-headers foo`), the parameter resolves as the string `"foo"`.
+  This enables us to successfully distinguish unknown commands from the default command, but it is not documented in CAC's command-resolution lifecycle.
