@@ -7,6 +7,18 @@ import { cfHeaders } from '../src/plugins/vite.js';
 describe('Vite Plugin', () => {
 	let tempDir: string;
 
+	function callConfigResolved(
+		plugin: ReturnType<typeof cfHeaders>,
+		config: { root: string; build?: { outDir?: string } },
+	) {
+		(
+			plugin.configResolved as (config: {
+				root: string;
+				build?: { outDir?: string };
+			}) => void
+		)?.(config);
+	}
+
 	beforeEach(async () => {
 		tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cf-headers-vite-'));
 	});
@@ -17,7 +29,7 @@ describe('Vite Plugin', () => {
 	});
 
 	it('has the correct plugin properties', () => {
-		const plugin = cfHeaders({ rules: [] }) as any;
+		const plugin = cfHeaders({ rules: [] });
 		expect(plugin.name).toBe('cf-headers');
 		expect(plugin.apply).toBe('build');
 		expect(typeof plugin.closeBundle).toBe('function');
@@ -27,9 +39,9 @@ describe('Vite Plugin', () => {
 	it('resolves the output directory correctly (relative path)', async () => {
 		const plugin = cfHeaders({
 			rules: [{ path: '/assets/*', headers: { 'X-Vite': 'yes' } }],
-		}) as any;
+		});
 
-		plugin.configResolved?.({
+		callConfigResolved(plugin, {
 			root: tempDir,
 			build: { outDir: 'custom-dist' },
 		});
@@ -44,10 +56,10 @@ describe('Vite Plugin', () => {
 	it('resolves the output directory correctly (absolute path)', async () => {
 		const plugin = cfHeaders({
 			rules: [{ path: '/assets/*', headers: { 'X-Vite': 'yes' } }],
-		}) as any;
+		});
 		const absoluteOutDir = path.join(tempDir, 'absolute-dist');
 
-		plugin.configResolved?.({
+		callConfigResolved(plugin, {
 			root: '/ignored',
 			build: { outDir: absoluteOutDir },
 		});
@@ -62,9 +74,9 @@ describe('Vite Plugin', () => {
 	it('throws on validation errors in strict mode (default)', async () => {
 		const plugin = cfHeaders({
 			rules: [{ path: '', headers: { 'X-Vite': 'yes' } }],
-		}) as any;
+		});
 
-		plugin.configResolved?.({
+		callConfigResolved(plugin, {
 			root: tempDir,
 			build: { outDir: 'dist' },
 		});
@@ -77,9 +89,9 @@ describe('Vite Plugin', () => {
 		const plugin = cfHeaders({
 			strict: false,
 			rules: [{ path: '', headers: { 'X-Vite': 'yes' } }],
-		}) as any;
+		});
 
-		plugin.configResolved?.({
+		callConfigResolved(plugin, {
 			root: tempDir,
 			build: { outDir: 'dist' },
 		});

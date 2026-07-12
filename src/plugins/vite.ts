@@ -26,7 +26,7 @@ export interface CfHeadersVitePluginOptions {
  *   ],
  * });
  */
-export function cfHeaders(options: CfHeadersVitePluginOptions): Plugin {
+export function cfHeaders(options: CfHeadersVitePluginOptions) {
 	let resolvedOutDir = 'dist';
 
 	return {
@@ -59,5 +59,5 @@ export function cfHeaders(options: CfHeadersVitePluginOptions): Plugin {
 					: path.join(config.root, config.build.outDir);
 			}
 		},
-	};
+	} satisfies Plugin;
 }
