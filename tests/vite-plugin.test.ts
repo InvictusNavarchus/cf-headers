@@ -17,7 +17,7 @@ describe('Vite Plugin', () => {
 	});
 
 	it('has the correct plugin properties', () => {
-		const plugin = cfHeaders({ rules: [] });
+		const plugin = cfHeaders({ rules: [] }) as any;
 		expect(plugin.name).toBe('cf-headers');
 		expect(plugin.apply).toBe('build');
 		expect(typeof plugin.closeBundle).toBe('function');
@@ -27,7 +27,7 @@ describe('Vite Plugin', () => {
 	it('resolves the output directory correctly (relative path)', async () => {
 		const plugin = cfHeaders({
 			rules: [{ path: '/assets/*', headers: { 'X-Vite': 'yes' } }],
-		});
+		}) as any;
 
 		plugin.configResolved?.({
 			root: tempDir,
@@ -44,7 +44,7 @@ describe('Vite Plugin', () => {
 	it('resolves the output directory correctly (absolute path)', async () => {
 		const plugin = cfHeaders({
 			rules: [{ path: '/assets/*', headers: { 'X-Vite': 'yes' } }],
-		});
+		}) as any;
 		const absoluteOutDir = path.join(tempDir, 'absolute-dist');
 
 		plugin.configResolved?.({
@@ -62,7 +62,7 @@ describe('Vite Plugin', () => {
 	it('throws on validation errors in strict mode (default)', async () => {
 		const plugin = cfHeaders({
 			rules: [{ path: '', headers: { 'X-Vite': 'yes' } }],
-		});
+		}) as any;
 
 		plugin.configResolved?.({
 			root: tempDir,
@@ -77,7 +77,7 @@ describe('Vite Plugin', () => {
 		const plugin = cfHeaders({
 			strict: false,
 			rules: [{ path: '', headers: { 'X-Vite': 'yes' } }],
-		});
+		}) as any;
 
 		plugin.configResolved?.({
 			root: tempDir,

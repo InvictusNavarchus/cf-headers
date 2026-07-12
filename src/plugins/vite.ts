@@ -2,23 +2,12 @@ import { buildHeadersFile, assertNoErrors } from '../index.js';
 import type { HeaderRule } from '../types.js';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
+import type { Plugin } from 'vite';
 
 export interface CfHeadersVitePluginOptions {
 	rules: HeaderRule[];
 	/** Only warn (instead of failing the build) on validation issues. */
 	strict?: boolean;
-}
-
-/** Minimal structural type so this file has no hard compile-time
- * dependency on Vite's types (keeps `vite` an optional peer dependency). */
-interface MinimalVitePlugin {
-	name: string;
-	apply: 'build';
-	closeBundle: () => Promise<void> | void;
-	configResolved?: (config: {
-		build?: { outDir?: string };
-		root: string;
-	}) => void;
 }
 
 /**
@@ -37,9 +26,7 @@ interface MinimalVitePlugin {
  *   ],
  * });
  */
-export function cfHeaders(
-	options: CfHeadersVitePluginOptions,
-): MinimalVitePlugin {
+export function cfHeaders(options: CfHeadersVitePluginOptions): Plugin {
 	let resolvedOutDir = 'dist';
 
 	return {
