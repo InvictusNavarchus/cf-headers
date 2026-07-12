@@ -46,7 +46,7 @@
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome lint",
-		"format": "biome format --write",
+		"format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
 		"prepublishOnly": "npm run typecheck && npm run test && npm run build"
 	},
 	"dependencies": {
