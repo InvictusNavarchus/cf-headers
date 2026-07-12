@@ -7,6 +7,12 @@ import {
 	lockedDownPermissionsPolicy,
 	type PermissionsPolicyOptions,
 } from './helpers/permissions-policy.js';
+import type {
+	CrossOriginEmbedderPolicyValue,
+	CrossOriginOpenerPolicyValue,
+	CrossOriginResourcePolicyValue,
+	XFrameOptionsValue,
+} from './header-values.js';
 import type { HeaderRule } from './types.js';
 
 /** Configuration options for HTTP Strict Transport Security (HSTS). */
@@ -124,6 +130,51 @@ export function dynamicContentPreset(path = '/*'): HeaderRule {
 	};
 }
 
+// Helper: resolves boolean | T | undefined configuration options
+function resolveSecurityOption<T extends string>(
+	value: boolean | T | undefined,
+	defaultValue: T,
+): T | undefined {
+	if (value === false) return undefined;
+	if (value === true) return defaultValue;
+	return value ?? defaultValue;
+}
+
+function resolveXFrameOptions(
+	opt?: boolean | XFrameOptionsValue,
+): XFrameOptionsValue | undefined {
+	return resolveSecurityOption(opt, 'DENY');
+}
+
+function resolveHsts(opt?: boolean | HstsOptions): string | undefined {
+	return formatHsts(opt ?? { maxAge: 31536000 });
+}
+
+function resolvePermissionsPolicy(opt?: PermissionsPolicyOptions): string {
+	return opt
+		? lockedDownPermissionsPolicy(opt)
+		: 'camera=(), microphone=(), geolocation=()';
+}
+
+function resolveCoop(
+	opt?: boolean | CrossOriginOpenerPolicyValue,
+): CrossOriginOpenerPolicyValue | undefined {
+	return resolveSecurityOption(opt, 'same-origin');
+}
+
+function resolveCoep(
+	opt?: boolean | CrossOriginEmbedderPolicyValue,
+): CrossOriginEmbedderPolicyValue | undefined {
+	if (opt === undefined) return 'unsafe-none';
+	return resolveSecurityOption(opt, 'require-corp');
+}
+
+function resolveCorp(
+	opt?: boolean | CrossOriginResourcePolicyValue,
+): CrossOriginResourcePolicyValue | undefined {
+	return resolveSecurityOption(opt, 'same-origin');
+}
+
 /** A solid baseline of hardening headers for HTML/app routes. Pass
  * `options` to adjust CSP, HSTS, Permissions-Policy, COOP, COEP, or CORP.
  * For backward compatibility, you can also pass raw `CspOptions` as the second argument. */
@@ -131,79 +182,43 @@ export function securityHeadersPreset(
 	path = '/*',
 	options: CspOptions | SecurityHeadersPresetOptions = {},
 ): HeaderRule {
-	let cspOpts: CspOptions = {};
-	let hstsOpt: boolean | HstsOptions = { maxAge: 31536000 };
-	let permissionsOpt: PermissionsPolicyOptions | undefined;
-	let coopOpt:
-		| boolean
-		| 'same-origin'
-		| 'same-origin-allow-popups'
-		| 'unsafe-none' = 'same-origin';
-	let coepOpt: boolean | 'require-corp' | 'credentialless' | 'unsafe-none' =
-		'unsafe-none';
-	let corpOpt: boolean | 'same-origin' | 'same-site' | 'cross-origin' =
-		'same-origin';
-	let xFrameOptionsOpt: boolean | 'DENY' | 'SAMEORIGIN' = 'DENY';
+	let normalizedOpts: SecurityHeadersPresetOptions;
 
-	if (options) {
-		if (isSecurityHeadersPresetOptions(options)) {
-			const typedOpts = options;
-			cspOpts = typedOpts.csp ?? {};
-			if (typedOpts.hsts !== undefined) {
-				hstsOpt = typedOpts.hsts;
-			}
-			permissionsOpt = typedOpts.permissions;
-			if (typedOpts.coop !== undefined) coopOpt = typedOpts.coop;
-			if (typedOpts.coep !== undefined) coepOpt = typedOpts.coep;
-			if (typedOpts.corp !== undefined) corpOpt = typedOpts.corp;
-			if (typedOpts.xFrameOptions !== undefined) {
-				xFrameOptionsOpt = typedOpts.xFrameOptions;
-			}
-		} else {
-			// Backward compatibility: the options object itself contains CSP overrides
-			cspOpts = options;
-			console.warn(
-				'cf-headers: Passing raw CspOptions directly as the second argument to securityHeadersPreset is deprecated. ' +
-					'Please wrap your CSP options in the `csp` property, e.g. securityHeadersPreset("/*", { csp: { ... } }).',
-			);
-		}
+	if (isSecurityHeadersPresetOptions(options)) {
+		normalizedOpts = options;
+	} else {
+		// Backward compatibility: the options object itself contains CSP overrides
+		normalizedOpts = { csp: options };
+		console.warn(
+			'cf-headers: Passing raw CspOptions directly as the second argument to securityHeadersPreset is deprecated. ' +
+				'Please wrap your CSP options in the `csp` property, e.g. securityHeadersPreset("/*", { csp: { ... } }).',
+		);
 	}
 
 	const headers: HeaderRule['headers'] = {
 		'X-Content-Type-Options': 'nosniff',
 		'Referrer-Policy': 'strict-origin-when-cross-origin',
-		'Content-Security-Policy': strictCsp(cspOpts),
+		'Content-Security-Policy': strictCsp(normalizedOpts.csp ?? {}),
 	};
 
-	if (xFrameOptionsOpt !== false) {
-		headers['X-Frame-Options'] =
-			xFrameOptionsOpt === true ? 'DENY' : xFrameOptionsOpt;
-	}
+	const xfo = resolveXFrameOptions(normalizedOpts.xFrameOptions);
+	if (xfo) headers['X-Frame-Options'] = xfo;
 
-	const hstsValue = formatHsts(hstsOpt);
-	if (hstsValue) {
-		headers['Strict-Transport-Security'] = hstsValue;
-	}
+	const hsts = resolveHsts(normalizedOpts.hsts);
+	if (hsts) headers['Strict-Transport-Security'] = hsts;
 
-	// Note: We use a minimal default for Permissions-Policy ('camera=(), microphone=(), geolocation=()')
-	// to restrict the most commonly abused features without breaking standard features (like payment/usb)
-	// by default. For a broader lockdown, pass explicit options to use lockedDownPermissionsPolicy.
-	headers['Permissions-Policy'] = permissionsOpt
-		? lockedDownPermissionsPolicy(permissionsOpt)
-		: 'camera=(), microphone=(), geolocation=()';
+	headers['Permissions-Policy'] = resolvePermissionsPolicy(
+		normalizedOpts.permissions,
+	);
 
-	if (coopOpt !== false) {
-		headers['Cross-Origin-Opener-Policy'] =
-			coopOpt === true ? 'same-origin' : coopOpt;
-	}
-	if (coepOpt !== false) {
-		headers['Cross-Origin-Embedder-Policy'] =
-			coepOpt === true ? 'require-corp' : coepOpt;
-	}
-	if (corpOpt !== false) {
-		headers['Cross-Origin-Resource-Policy'] =
-			corpOpt === true ? 'same-origin' : corpOpt;
-	}
+	const coop = resolveCoop(normalizedOpts.coop);
+	if (coop) headers['Cross-Origin-Opener-Policy'] = coop;
+
+	const coep = resolveCoep(normalizedOpts.coep);
+	if (coep) headers['Cross-Origin-Embedder-Policy'] = coep;
+
+	const corp = resolveCorp(normalizedOpts.corp);
+	if (corp) headers['Cross-Origin-Resource-Policy'] = corp;
 
 	return {
 		path,
