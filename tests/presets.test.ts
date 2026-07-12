@@ -165,7 +165,7 @@ describe('presets', () => {
 		);
 		expect(p.headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
 		expect(p.headers['Cross-Origin-Resource-Policy']).toBe('same-origin');
-		expect(p.headers['Cross-Origin-Embedder-Policy']).toBeUndefined();
+		expect(p.headers['Cross-Origin-Embedder-Policy']).toBe('unsafe-none');
 	});
 
 	it('dynamicContentPreset sets no-store caching headers', () => {

@@ -29,7 +29,7 @@ export interface SecurityHeadersPresetOptions {
 	permissions?: PermissionsPolicyOptions;
 	/** Configures Cross-Origin-Opener-Policy (COOP). Pass `false` to disable. Defaults to `'same-origin'`. */
 	coop?: boolean | 'same-origin' | 'same-origin-allow-popups' | 'unsafe-none';
-	/** Configures Cross-Origin-Embedder-Policy (COEP). Pass `false` to disable. Defaults to `false` (disabled) to avoid breaking third-party assets. */
+	/** Configures Cross-Origin-Embedder-Policy (COEP). Pass `false` to disable. Defaults to `'unsafe-none'`. */
 	coep?: boolean | 'require-corp' | 'credentialless' | 'unsafe-none';
 	/** Configures Cross-Origin-Resource-Policy (CORP). Pass `false` to disable. Defaults to `'same-origin'`. */
 	corp?: boolean | 'same-origin' | 'same-site' | 'cross-origin';
@@ -140,7 +140,7 @@ export function securityHeadersPreset(
 		| 'same-origin-allow-popups'
 		| 'unsafe-none' = 'same-origin';
 	let coepOpt: boolean | 'require-corp' | 'credentialless' | 'unsafe-none' =
-		false;
+		'unsafe-none';
 	let corpOpt: boolean | 'same-origin' | 'same-site' | 'cross-origin' =
 		'same-origin';
 	let xFrameOptionsOpt: boolean | 'DENY' | 'SAMEORIGIN' = 'DENY';
