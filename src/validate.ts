@@ -130,6 +130,30 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
 				}
 			}
 
+			if (lowerName === 'permissions-policy' && !isDetach(value)) {
+				if (stringValue.includes("'")) {
+					issues.push({
+						level: 'error',
+						message: `Permissions-Policy cannot contain single quotes. Use unquoted self or double-quoted origins: "${stringValue}".`,
+						ruleIndex,
+					});
+				}
+				if (/\bnone\b/i.test(stringValue)) {
+					issues.push({
+						level: 'error',
+						message: `Permissions-Policy does not support the "none" keyword. To disable a feature, use an empty allowlist like "feature=()": "${stringValue}".`,
+						ruleIndex,
+					});
+				}
+				if (/\bsrc\b/i.test(stringValue)) {
+					issues.push({
+						level: 'error',
+						message: `Permissions-Policy does not support the "src" keyword. Use "self" or explicit origins instead: "${stringValue}".`,
+						ruleIndex,
+					});
+				}
+			}
+
 			const info = getHeaderInfo(name);
 			if (info) {
 				if (info.status === 'deprecated') {
