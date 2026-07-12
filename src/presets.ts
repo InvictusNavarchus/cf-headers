@@ -33,6 +33,8 @@ export interface SecurityHeadersPresetOptions {
 	coep?: boolean | 'require-corp' | 'credentialless' | 'unsafe-none';
 	/** Configures Cross-Origin-Resource-Policy (CORP). Pass `false` to disable. Defaults to `'same-origin'`. */
 	corp?: boolean | 'same-origin' | 'same-site' | 'cross-origin';
+	/** Configures X-Frame-Options. Pass `false` to disable. Defaults to `'DENY'`. */
+	xFrameOptions?: boolean | 'DENY' | 'SAMEORIGIN';
 }
 
 function formatHsts(options: boolean | HstsOptions): string | undefined {
@@ -74,6 +76,7 @@ function isSecurityHeadersPresetOptions(
 		'coop',
 		'coep',
 		'corp',
+		'xFrameOptions',
 	]);
 	return keys.some((key) => presetKeys.has(key));
 }
@@ -140,6 +143,7 @@ export function securityHeadersPreset(
 		false;
 	let corpOpt: boolean | 'same-origin' | 'same-site' | 'cross-origin' =
 		'same-origin';
+	let xFrameOptionsOpt: boolean | 'DENY' | 'SAMEORIGIN' = 'DENY';
 
 	if (options) {
 		if (isSecurityHeadersPresetOptions(options)) {
@@ -152,6 +156,9 @@ export function securityHeadersPreset(
 			if (typedOpts.coop !== undefined) coopOpt = typedOpts.coop;
 			if (typedOpts.coep !== undefined) coepOpt = typedOpts.coep;
 			if (typedOpts.corp !== undefined) corpOpt = typedOpts.corp;
+			if (typedOpts.xFrameOptions !== undefined) {
+				xFrameOptionsOpt = typedOpts.xFrameOptions;
+			}
 		} else {
 			// Backward compatibility: the options object itself contains CSP overrides
 			cspOpts = options;
@@ -168,9 +175,10 @@ export function securityHeadersPreset(
 		'Content-Security-Policy': strictCsp(cspOpts),
 	};
 
-	// Note: X-Frame-Options is intentionally omitted because the default CSP
-	// includes 'frame-ancestors 'none'', which obsoletes it in modern browsers.
-	// We omit it to keep headers lean, but some legacy scanners may still flag its absence.
+	if (xFrameOptionsOpt !== false) {
+		headers['X-Frame-Options'] =
+			xFrameOptionsOpt === true ? 'DENY' : xFrameOptionsOpt;
+	}
 
 	const hstsValue = formatHsts(hstsOpt);
 	if (hstsValue) {

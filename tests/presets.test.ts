@@ -157,6 +157,7 @@ describe('presets', () => {
 	it('securityHeadersPreset sets the baseline hardening headers', () => {
 		const p = securityHeadersPreset();
 		expect(p.headers['X-Content-Type-Options']).toBe('nosniff');
+		expect(p.headers['X-Frame-Options']).toBe('DENY');
 		expect(typeof p.headers['Content-Security-Policy']).toBe('string');
 		expect(p.headers['Strict-Transport-Security']).toBe('max-age=31536000');
 		expect(p.headers['Permissions-Policy']).toBe(
@@ -251,6 +252,17 @@ describe('presets', () => {
 		expect(p.headers['Cross-Origin-Opener-Policy']).toBeUndefined();
 		expect(p.headers['Cross-Origin-Embedder-Policy']).toBeUndefined();
 		expect(p.headers['Cross-Origin-Resource-Policy']).toBeUndefined();
+	});
+
+	it('securityHeadersPreset supports custom X-Frame-Options settings', () => {
+		const p1 = securityHeadersPreset('/*', { xFrameOptions: 'SAMEORIGIN' });
+		expect(p1.headers['X-Frame-Options']).toBe('SAMEORIGIN');
+
+		const p2 = securityHeadersPreset('/*', { xFrameOptions: false });
+		expect(p2.headers['X-Frame-Options']).toBeUndefined();
+
+		const p3 = securityHeadersPreset('/*', { xFrameOptions: true });
+		expect(p3.headers['X-Frame-Options']).toBe('DENY');
 	});
 
 	it('securityHeadersPreset supports backward compatibility with raw CspOptions', () => {
