@@ -84,7 +84,7 @@ export function securityHeadersPreset(
 ): HeaderRule {
 	let cspOpts: CspOptions = {};
 	let hstsOpt: boolean | HstsOptions = { maxAge: 31536000 };
-	let permissionsOpt: PermissionsPolicyOptions | undefined = undefined;
+	let permissionsOpt: PermissionsPolicyOptions | undefined;
 
 	if (options) {
 		if ('csp' in options || 'hsts' in options || 'permissions' in options) {
