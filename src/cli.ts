@@ -5,6 +5,7 @@ import { getHeaderInfo, HEADERS_REGISTRY } from './registry.js';
 import { assertNoErrors, validateConfig } from './validate.js';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
+import { parseArgs } from 'node:util';
 import type { ValidationIssue } from './types.js';
 
 const HELP = `cf-headers — type-safe _headers generator for Cloudflare Pages & Workers
@@ -33,23 +34,14 @@ function printIssues(issues: ValidationIssue[]): void {
 	}
 }
 
-async function runBuild(args: string[]): Promise<void> {
-	let configPath: string | undefined;
-	let outDirOverride: string | undefined;
-	let strictOverride: boolean | undefined;
-
-	for (let i = 0; i < args.length; i++) {
-		const arg = args[i];
-		if (arg === '-c' || arg === '--config') {
-			configPath = args[++i];
-		} else if (arg === '-o' || arg === '--out-dir') {
-			outDirOverride = args[++i];
-		} else if (arg === '--no-strict') {
-			strictOverride = false;
-		} else if (arg === '--strict') {
-			strictOverride = true;
-		}
-	}
+async function runBuild(options: {
+	config?: string;
+	'out-dir'?: string;
+	strict?: boolean;
+}): Promise<void> {
+	const configPath = options.config;
+	const outDirOverride = options['out-dir'];
+	const strictOverride = options.strict;
 
 	const cwd = process.cwd();
 	const resolvedConfigPath = configPath
@@ -86,13 +78,9 @@ async function runBuild(args: string[]): Promise<void> {
 	);
 }
 
-function runListHeaders(args: string[]): void {
-	const categoryFilter = args
-		.find((a) => a.startsWith('--category='))
-		?.split('=')[1];
-	const statusFilter = args
-		.find((a) => a.startsWith('--status='))
-		?.split('=')[1];
+function runListHeaders(options: { category?: string; status?: string }): void {
+	const categoryFilter = options.category;
+	const statusFilter = options.status;
 
 	const rows = HEADERS_REGISTRY.filter(
 		(h) => !categoryFilter || h.category === categoryFilter,
@@ -131,31 +119,81 @@ function runInspect(name: string | undefined): void {
 }
 
 async function main(): Promise<void> {
-	const [, , command, ...rest] = process.argv;
+	const parsed = (() => {
+		try {
+			return parseArgs({
+				args: process.argv.slice(2),
+				options: {
+					help: {
+						type: 'boolean',
+						short: 'h',
+					},
+					config: {
+						type: 'string',
+						short: 'c',
+					},
+					'out-dir': {
+						type: 'string',
+						short: 'o',
+					},
+					strict: {
+						type: 'boolean',
+					},
+					category: {
+						type: 'string',
+					},
+					status: {
+						type: 'string',
+					},
+				},
+				allowPositionals: true,
+			});
+		} catch (err) {
+			console.error(`[cf-headers] Error: ${(err as Error).message}`);
+			console.log(HELP);
+			process.exitCode = 1;
+			return null;
+		}
+	})();
 
-	if (command === '--help' || command === '-h') {
+	if (!parsed) {
+		return;
+	}
+
+	const { values, positionals } = parsed;
+
+	if (values.help) {
 		console.log(HELP);
 		return;
 	}
 
+	const command = positionals[0];
+
 	if (command === 'list-headers') {
-		runListHeaders(rest);
+		runListHeaders({
+			category: values.category,
+			status: values.status,
+		});
 		return;
 	}
 
 	if (command === 'inspect') {
-		runInspect(rest[0]);
+		runInspect(positionals[1]);
 		return;
 	}
 
 	if (command === undefined || command === 'build') {
-		await runBuild(rest);
+		await runBuild({
+			config: values.config,
+			'out-dir': values['out-dir'],
+			strict: values.strict,
+		});
 		return;
 	}
 
-	// Anything else is treated as a flag for the default "build" command,
-	// e.g. `cf-headers --config ./my.config.ts`.
-	await runBuild([command, ...rest]);
+	console.error(`[cf-headers] Unknown command: ${command}`);
+	console.log(HELP);
+	process.exitCode = 1;
 }
 
 main().catch((error: unknown) => {
