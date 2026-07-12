@@ -1,72 +1,72 @@
 {
-  "name": "cf-headers",
-  "version": "0.1.0",
-  "description": "Type-safe _headers file generator for Cloudflare Pages & Workers static assets, with a full catalog of HTTP response headers (status, deprecation, and reference info) and autocomplete for header names and values.",
-  "keywords": [
-    "cloudflare",
-    "cloudflare-pages",
-    "cloudflare-workers",
-    "headers",
-    "http-headers",
-    "security-headers",
-    "cache-control",
-    "vite-plugin",
-    "typescript"
-  ],
-  "license": "MIT",
-  "type": "module",
-  "sideEffects": false,
-  "bin": {
-    "cf-headers": "./dist/cli.mjs"
-  },
-  "types": "./dist/index.d.mts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./vite": {
-      "types": "./dist/plugins/vite.d.mts",
-      "import": "./dist/plugins/vite.mjs"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
-  },
-  "dependencies": {
-    "esbuild": "^0.28.1"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.5.3",
-    "@types/node": "^26.1.1",
-    "tsdown": "^0.22.5",
-    "typescript": "^7.0.2",
-    "vite": "^8.1.4",
-    "vitest": "^4.1.10"
-  },
-  "peerDependencies": {
-    "vite": ">=5.0.0"
-  },
-  "peerDependenciesMeta": {
-    "vite": {
-      "optional": true
-    }
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "cf-headers",
+	"version": "0.1.0",
+	"description": "Type-safe _headers file generator for Cloudflare Pages & Workers static assets, with a full catalog of HTTP response headers (status, deprecation, and reference info) and autocomplete for header names and values.",
+	"keywords": [
+		"cloudflare",
+		"cloudflare-pages",
+		"cloudflare-workers",
+		"headers",
+		"http-headers",
+		"security-headers",
+		"cache-control",
+		"vite-plugin",
+		"typescript"
+	],
+	"license": "MIT",
+	"type": "module",
+	"sideEffects": false,
+	"bin": {
+		"cf-headers": "./dist/cli.mjs"
+	},
+	"types": "./dist/index.d.mts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.mts",
+			"import": "./dist/index.mjs"
+		},
+		"./vite": {
+			"types": "./dist/plugins/vite.d.mts",
+			"import": "./dist/plugins/vite.mjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"dev": "tsdown --watch",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "npm run typecheck && npm run test && npm run build"
+	},
+	"dependencies": {
+		"esbuild": "^0.28.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.3",
+		"@types/node": "^26.1.1",
+		"tsdown": "^0.22.5",
+		"typescript": "^7.0.2",
+		"vite": "^8.1.4",
+		"vitest": "^4.1.10"
+	},
+	"peerDependencies": {
+		"vite": ">=5.0.0"
+	},
+	"peerDependenciesMeta": {
+		"vite": {
+			"optional": true
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }
