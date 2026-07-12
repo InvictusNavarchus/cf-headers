@@ -6,11 +6,11 @@ export default defineConfig({
     cli: "src/cli.ts",
     "plugins/vite": "src/plugins/vite.ts",
   },
-  format: ["esm", "cjs"],
+  format: ["esm"],
   dts: true,
   sourcemap: true,
   clean: true,
-  target: "node18",
+  target: "node20",
   splitting: false,
-  shims: true,
 });
+

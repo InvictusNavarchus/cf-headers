@@ -232,7 +232,7 @@ cf-headers inspect <name>       Show metadata for a single header
 cf-headers --help               Show usage
 
 Options for build:
-  -c, --config <path>   Path to a cf-headers.config.{ts,js,mjs,cjs} file
+  -c, --config <path>   Path to a cf-headers.config.{ts,js,mjs} file
   -o, --out-dir <dir>   Override the config's outDir
   --no-strict           Only warn on validation issues instead of failing
 ```

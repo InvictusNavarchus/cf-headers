@@ -9,7 +9,6 @@ const CONFIG_CANDIDATES = [
   "cf-headers.config.mts",
   "cf-headers.config.js",
   "cf-headers.config.mjs",
-  "cf-headers.config.cjs",
 ];
 
 /** Search `cwd` for a supported config filename. */
@@ -47,7 +46,7 @@ export async function loadConfig(configPath: string): Promise<CfHeadersConfig> {
     const { code } = await transform(source, {
       loader: "ts",
       format: "esm",
-      target: "node18",
+      target: "node20",
       sourcefile: configPath,
     });
     // Written *next to* the original config (not os.tmpdir()) so relative

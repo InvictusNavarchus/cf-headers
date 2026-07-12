@@ -19,25 +19,15 @@
   "bin": {
     "cf-headers": "./dist/cli.mjs"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": {
-        "import": "./dist/index.d.mts",
-        "require": "./dist/index.d.cts"
-      },
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./vite": {
-      "types": {
-        "import": "./dist/plugins/vite.d.mts",
-        "require": "./dist/plugins/vite.d.cts"
-      },
-      "import": "./dist/plugins/vite.mjs",
-      "require": "./dist/plugins/vite.cjs"
+      "types": "./dist/plugins/vite.d.mts",
+      "import": "./dist/plugins/vite.mjs"
     },
     "./package.json": "./package.json"
   },
@@ -47,7 +37,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "build": "tsdown",
@@ -68,7 +58,7 @@
     "vitest": "^4.1.10"
   },
   "peerDependencies": {
-    "vite": ">=4.0.0"
+    "vite": ">=5.0.0"
   },
   "peerDependenciesMeta": {
     "vite": {

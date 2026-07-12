@@ -16,7 +16,7 @@ Usage:
   cf-headers --help                 Show this message
 
 Options for "build" (the default command):
-  -c, --config <path>   Path to a cf-headers.config.{ts,js,mjs,cjs} file
+  -c, --config <path>   Path to a cf-headers.config.{ts,js,mjs} file
                          (default: search the current directory)
   -o, --out-dir <dir>   Override the config's outDir
   --no-strict           Only warn on validation issues instead of failing
