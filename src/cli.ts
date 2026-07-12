@@ -1,8 +1,7 @@
 #!/usr/bin/env node
-import { generateHeadersFile } from './build.js';
+import { buildHeadersFile, assertNoErrors } from './index.js';
 import { findConfigFile, loadConfig } from './load-config.js';
 import { getHeaderInfo, HEADERS_REGISTRY } from './registry.js';
-import { assertNoErrors, validateConfig } from './validate.js';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { cac } from 'cac';
@@ -47,13 +46,11 @@ export async function runBuild(options: {
 	const outDir = outDirOverride ?? config.outDir;
 	const strict = strictOverride ?? config.strict ?? true;
 
-	const issues = validateConfig(config.rules);
+	const { content, issues } = buildHeadersFile(config.rules);
 	printIssues(issues);
 	if (strict) {
 		assertNoErrors(issues);
 	}
-
-	const content = generateHeadersFile(config.rules);
 	await fs.mkdir(outDir, { recursive: true });
 	const filePath = path.join(outDir, '_headers');
 	await fs.writeFile(filePath, content, 'utf-8');

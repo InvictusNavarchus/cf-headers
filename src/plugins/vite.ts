@@ -1,5 +1,4 @@
-import { generateHeadersFile } from '../build.js';
-import { assertNoErrors, validateConfig } from '../validate.js';
+import { buildHeadersFile, assertNoErrors } from '../index.js';
 import type { HeaderRule } from '../types.js';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
@@ -50,7 +49,7 @@ export function cfHeaders(
 		// plugin context; we only need outDir, read via a loose `configResolved`
 		// hook added dynamically below to avoid importing Vite's types.
 		async closeBundle() {
-			const issues = validateConfig(options.rules);
+			const { content, issues } = buildHeadersFile(options.rules);
 			if (options.strict !== false) {
 				assertNoErrors(issues);
 			} else {
@@ -59,8 +58,6 @@ export function cfHeaders(
 					console.warn(`[cf-headers] ${issue.level}: ${issue.message}`);
 				}
 			}
-
-			const content = generateHeadersFile(options.rules);
 			await fs.mkdir(resolvedOutDir, { recursive: true });
 			await fs.writeFile(
 				path.join(resolvedOutDir, '_headers'),

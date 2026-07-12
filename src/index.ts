@@ -132,12 +132,11 @@ export interface WriteHeadersFileResult {
 export async function writeHeadersFile(
 	config: CfHeadersConfig,
 ): Promise<WriteHeadersFileResult> {
-	const issues = validateConfig(config.rules);
+	const { content, issues } = buildHeadersFile(config.rules);
 	if (config.strict !== false) {
 		assertNoErrors(issues);
 	}
 
-	const content = generateHeadersFile(config.rules);
 	await fs.mkdir(config.outDir, { recursive: true });
 	const filePath = path.join(config.outDir, '_headers');
 	await fs.writeFile(filePath, content, 'utf-8');
