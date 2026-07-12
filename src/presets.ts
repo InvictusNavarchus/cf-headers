@@ -69,22 +69,32 @@ function formatHsts(options: boolean | HstsOptions): string | undefined {
 	return parts.join('; ');
 }
 
+const PRESET_KEYS = [
+	'csp',
+	'hsts',
+	'permissions',
+	'coop',
+	'coep',
+	'corp',
+	'xFrameOptions',
+] as const satisfies readonly (keyof SecurityHeadersPresetOptions)[];
+
+// Compile-time check to ensure all keys of SecurityHeadersPresetOptions are represented in PRESET_KEYS
+type PresetKeysExhaustive = [keyof SecurityHeadersPresetOptions] extends [
+	(typeof PRESET_KEYS)[number],
+]
+	? true
+	: never;
+const _exhaustiveCheck: PresetKeysExhaustive = true;
+
 function isSecurityHeadersPresetOptions(
 	options: CspOptions | SecurityHeadersPresetOptions,
 ): options is SecurityHeadersPresetOptions {
 	const keys = Object.keys(options);
 	if (keys.length === 0) return true;
 
-	const presetKeys = new Set([
-		'csp',
-		'hsts',
-		'permissions',
-		'coop',
-		'coep',
-		'corp',
-		'xFrameOptions',
-	]);
-	return keys.some((key) => presetKeys.has(key));
+	const presetKeysSet = new Set<string>(PRESET_KEYS);
+	return keys.some((key) => presetKeysSet.has(key));
 }
 
 /** Allow any origin to fetch matching assets (fonts, images, etc) under the specified `path`. */
@@ -178,9 +188,26 @@ function resolveCorp(
 	return resolveSecurityOption(opt, 'same-origin');
 }
 
-/** A solid baseline of hardening headers for HTML/app routes. Pass
+/**
+ * A solid baseline of hardening headers for HTML/app routes.
+ *
+ * @deprecated Passing raw CspOptions directly as the second argument is deprecated and will be removed in the next major version (v1.0.0).
+ * Please wrap your CSP options in the `csp` property, e.g. `securityHeadersPreset("/*", { csp: { ... } })`.
+ */
+export function securityHeadersPreset(
+	path: string,
+	options: CspOptions,
+): HeaderRule;
+
+/**
+ * A solid baseline of hardening headers for HTML/app routes. Pass
  * `options` to adjust CSP, HSTS, Permissions-Policy, COOP, COEP, or CORP.
- * For backward compatibility, you can also pass raw `CspOptions` as the second argument. */
+ */
+export function securityHeadersPreset(
+	path?: string,
+	options?: SecurityHeadersPresetOptions,
+): HeaderRule;
+
 export function securityHeadersPreset(
 	path = '/*',
 	options: CspOptions | SecurityHeadersPresetOptions = {},
