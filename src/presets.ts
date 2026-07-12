@@ -35,7 +35,7 @@ export interface SecurityHeadersPresetOptions {
 	permissions?: PermissionsPolicyOptions;
 	/** Configures Cross-Origin-Opener-Policy (COOP). Pass `false` to disable. Defaults to `'same-origin'`. */
 	coop?: boolean | 'same-origin' | 'same-origin-allow-popups' | 'unsafe-none';
-	/** Configures Cross-Origin-Embedder-Policy (COEP). Pass `false` to disable. Defaults to `'unsafe-none'`. */
+	/** Configures Cross-Origin-Embedder-Policy (COEP). Pass `false` to disable. Defaults to `false` (disabled) to avoid breaking third-party assets. */
 	coep?: boolean | 'require-corp' | 'credentialless' | 'unsafe-none';
 	/** Configures Cross-Origin-Resource-Policy (CORP). Pass `false` to disable. Defaults to `'same-origin'`. */
 	corp?: boolean | 'same-origin' | 'same-site' | 'cross-origin';
@@ -133,11 +133,15 @@ export function dynamicContentPreset(path = '/*'): HeaderRule {
 // Helper: resolves boolean | T | undefined configuration options
 function resolveSecurityOption<T extends string>(
 	value: boolean | T | undefined,
-	defaultValue: T,
+	trueValue: T,
+	undefinedValue?: T,
 ): T | undefined {
 	if (value === false) return undefined;
-	if (value === true) return defaultValue;
-	return value ?? defaultValue;
+	if (value === true) return trueValue;
+	if (value === undefined) {
+		return arguments.length >= 3 ? undefinedValue : trueValue;
+	}
+	return value;
 }
 
 function resolveXFrameOptions(
@@ -165,8 +169,7 @@ function resolveCoop(
 function resolveCoep(
 	opt?: boolean | CrossOriginEmbedderPolicyValue,
 ): CrossOriginEmbedderPolicyValue | undefined {
-	if (opt === undefined) return 'unsafe-none';
-	return resolveSecurityOption(opt, 'require-corp');
+	return resolveSecurityOption(opt, 'require-corp', undefined);
 }
 
 function resolveCorp(
