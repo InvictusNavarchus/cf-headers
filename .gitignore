@@ -4,3 +4,5 @@ dist/
 .DS_Store
 coverage/
 .cf-headers.config.*.mjs
+examples/_headers
+

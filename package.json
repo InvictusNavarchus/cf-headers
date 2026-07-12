@@ -47,6 +47,7 @@
 		"typecheck": "tsc --noEmit",
 		"lint": "biome lint",
 		"format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
+		"example:cli": "bun run build && node dist/cli.mjs --config examples/cf-headers.config.ts --out-dir examples && cat examples/_headers",
 		"prepublishOnly": "npm run typecheck && npm run test && npm run build"
 	},
 	"dependencies": {
