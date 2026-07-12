@@ -1,4 +1,3 @@
-import { transform } from 'esbuild';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -43,6 +42,15 @@ export async function loadConfig(configPath: string): Promise<CfHeadersConfig> {
 
 	if (ext === '.ts' || ext === '.mts') {
 		const source = await fs.readFile(configPath, 'utf-8');
+		let transform: typeof import('esbuild').transform;
+		try {
+			const esbuild = await import('esbuild');
+			transform = esbuild.transform;
+		} catch {
+			throw new Error(
+				'Failed to load TypeScript configuration. To parse .ts/.mts config files, you must install "esbuild" as a dependency or devDependency in your project.',
+			);
+		}
 		const { code } = await transform(source, {
 			loader: 'ts',
 			format: 'esm',
