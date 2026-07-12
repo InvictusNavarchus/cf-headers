@@ -47,35 +47,7 @@ const FEATURE_NAMES: Record<
 function serializeAllowlist(allowlist: PermissionsPolicyAllowlist): string {
 	if (allowlist === '*') return '*';
 	if (allowlist.length === 0) return '()';
-	return `(${allowlist
-		.map((origin) => {
-			const trimmed = origin.trim().replace(/^'|'$/g, '');
-			if (trimmed === 'none') {
-				throw new Error(
-					`permissionsPolicy: "none" is not a valid origin keyword in Permissions-Policy. To block a feature, use an empty array [] (which renders as "()").`,
-				);
-			}
-			if (trimmed === 'src') {
-				throw new Error(
-					`permissionsPolicy: "src" is not a valid origin keyword in Permissions-Policy. Use "self" or explicit origins instead.`,
-				);
-			}
-			if (trimmed === '*') {
-				throw new Error(
-					`permissionsPolicy: Wildcard "*" cannot be used inside an array. Use the string "*" directly (e.g., camera: '*') instead of ['*'].`,
-				);
-			}
-			if (trimmed === 'self') {
-				if (origin !== 'self') {
-					throw new Error(
-						`permissionsPolicy: Single-quoted "${origin}" is invalid in Permissions-Policy. Use the unquoted "self" token instead.`,
-					);
-				}
-				return 'self';
-			}
-			return `"${origin}"`;
-		})
-		.join(' ')})`;
+	return `(${allowlist.map((origin) => (origin === 'self' ? 'self' : `"${origin}"`)).join(' ')})`;
 }
 
 /**

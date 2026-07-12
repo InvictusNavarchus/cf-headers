@@ -127,16 +127,6 @@ describe('permissionsPolicy', () => {
 		expect(lockedDownPermissionsPolicy()).toContain('camera=()');
 		expect(lockedDownPermissionsPolicy()).toContain('browsing-topics=()');
 	});
-
-	it('throws on invalid keywords or quotes', () => {
-		expect(() => permissionsPolicy({ camera: ["'self'"] })).toThrow(
-			/Single-quoted/,
-		);
-		expect(() => permissionsPolicy({ camera: ['none'] })).toThrow(/none/);
-		expect(() => permissionsPolicy({ camera: ["'none'"] })).toThrow(/none/);
-		expect(() => permissionsPolicy({ camera: ['src'] })).toThrow(/src/);
-		expect(() => permissionsPolicy({ camera: ['*'] })).toThrow(/Wildcard/);
-	});
 });
 
 describe('presets', () => {

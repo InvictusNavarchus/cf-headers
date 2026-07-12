@@ -152,6 +152,13 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
 						ruleIndex,
 					});
 				}
+				if (/\([^)]*\*[^)]*\)/.test(stringValue)) {
+					issues.push({
+						level: 'error',
+						message: `Permissions-Policy does not support wildcard "*" inside a parenthesized list. Use the bare wildcard "feature=*" without parenthesis or quotes: "${stringValue}".`,
+						ruleIndex,
+					});
+				}
 			}
 
 			const info = getHeaderInfo(name);

@@ -321,17 +321,20 @@ describe('validateConfig', () => {
 			{
 				path: '/app',
 				headers: {
-					'Permissions-Policy': 'microphone=none, usb=src',
+					'Permissions-Policy': 'microphone=none, usb=src, fullscreen=(*)',
 				},
 			},
 		];
 		const issues = validateConfig(rules);
-		expect(issues).toHaveLength(4);
+		expect(issues).toHaveLength(5);
 		expect(issues.every((i) => i.level === 'error')).toBe(true);
 		expect(issues[0]?.message).toContain('cannot contain single quotes');
 		expect(issues[1]?.message).toContain('does not support the "none" keyword');
 		expect(issues[2]?.message).toContain('does not support the "none" keyword');
 		expect(issues[3]?.message).toContain('does not support the "src" keyword');
+		expect(issues[4]?.message).toContain(
+			'does not support wildcard "*" inside a parenthesized list',
+		);
 	});
 });
 
