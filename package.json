@@ -47,7 +47,9 @@
 		"typecheck": "tsc --noEmit",
 		"lint": "biome lint",
 		"format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
-		"example:cli": "bun run build && node dist/cli.mjs --config examples/cf-headers.config.ts --out-dir examples && cat examples/_headers",
+		"example:basic": "bun run build && node dist/cli.mjs --config examples/basic/cf-headers.config.ts --out-dir examples/basic && cat examples/basic/_headers",
+		"example:production": "bun run build && node dist/cli.mjs --config examples/production/cf-headers.config.ts --out-dir examples/production && cat examples/production/_headers",
+		"example:cli": "bun run example:basic && bun run example:production",
 		"prepublishOnly": "npm run typecheck && npm run test && npm run build"
 	},
 	"dependencies": {
