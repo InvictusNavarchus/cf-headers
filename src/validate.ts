@@ -130,6 +130,44 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
 				}
 			}
 
+			if (
+				(lowerName === 'cache-control' ||
+					lowerName === 'content-security-policy' ||
+					lowerName === 'permissions-policy') &&
+				!isDetach(value)
+			) {
+				if (stringValue.trim().length === 0) {
+					issues.push({
+						level: 'error',
+						message: `Header "${name}" cannot be empty. At least one directive or option must be set.`,
+						ruleIndex,
+					});
+				}
+			}
+
+			if (lowerName === 'cache-control' && !isDetach(value)) {
+				const hasPublic = /\bpublic\b/.test(stringValue);
+				const hasPrivate = /\bprivate\b/.test(stringValue);
+				if (hasPublic && hasPrivate) {
+					issues.push({
+						level: 'error',
+						message: `Cache-Control cannot contain both "public" and "private" directives: "${stringValue}".`,
+						ruleIndex,
+					});
+				}
+
+				const hasNoStore = /\bno-store\b/.test(stringValue);
+				const hasMaxAge = /\bmax-age\b/.test(stringValue);
+				const hasImmutable = /\bimmutable\b/.test(stringValue);
+				if (hasNoStore && (hasMaxAge || hasImmutable)) {
+					issues.push({
+						level: 'error',
+						message: `Cache-Control directive "no-store" makes "max-age" and "immutable" meaningless — choose either no-store or caching options: "${stringValue}".`,
+						ruleIndex,
+					});
+				}
+			}
+
 			if (lowerName === 'permissions-policy' && !isDetach(value)) {
 				if (stringValue.includes("'")) {
 					issues.push({

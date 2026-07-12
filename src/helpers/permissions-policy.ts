@@ -77,10 +77,6 @@ export function permissionsPolicy(options: PermissionsPolicyOptions): string {
 		}
 	}
 
-	if (parts.length === 0) {
-		throw new Error('permissionsPolicy(): at least one feature must be set.');
-	}
-
 	return parts.join(', ');
 }
 

@@ -336,6 +336,51 @@ describe('validateConfig', () => {
 			'does not support wildcard "*" inside a parenthesized list',
 		);
 	});
+
+	it('flags empty generated headers as errors', () => {
+		const rules: HeaderRule[] = [
+			{
+				path: '/*',
+				headers: {
+					'Cache-Control': '',
+					'Content-Security-Policy': '   ',
+					'Permissions-Policy': '',
+				},
+			},
+		];
+		const issues = validateConfig(rules);
+		expect(issues).toHaveLength(3);
+		expect(issues.every((i) => i.level === 'error')).toBe(true);
+		expect(issues[0]?.message).toContain('cannot be empty');
+		expect(issues[1]?.message).toContain('cannot be empty');
+		expect(issues[2]?.message).toContain('cannot be empty');
+	});
+
+	it('flags invalid Cache-Control directives as errors', () => {
+		const rules: HeaderRule[] = [
+			{
+				path: '/*',
+				headers: {
+					'Cache-Control': 'public, private, max-age=3600',
+				},
+			},
+			{
+				path: '/no-store',
+				headers: {
+					'Cache-Control': 'no-store, max-age=60, immutable',
+				},
+			},
+		];
+		const issues = validateConfig(rules);
+		expect(issues).toHaveLength(2);
+		expect(issues.every((i) => i.level === 'error')).toBe(true);
+		expect(issues[0]?.message).toContain(
+			'cannot contain both "public" and "private"',
+		);
+		expect(issues[1]?.message).toContain(
+			'makes "max-age" and "immutable" meaningless',
+		);
+	});
 });
 
 describe('getRenderedLines', () => {

@@ -46,20 +46,20 @@ describe('cacheControl', () => {
 		expect(noCacheControl()).toBe('public, max-age=0, must-revalidate');
 	});
 
-	it('rejects public+private together', () => {
-		expect(() => cacheControl({ public: true, private: true })).toThrow(
-			/mutually exclusive/,
+	it('serializes public+private together', () => {
+		expect(cacheControl({ public: true, private: true })).toBe(
+			'public, private',
 		);
 	});
 
-	it('rejects noStore combined with maxAge', () => {
-		expect(() => cacheControl({ noStore: true, maxAge: 60 })).toThrow(
-			/noStore/,
+	it('serializes noStore combined with maxAge', () => {
+		expect(cacheControl({ noStore: true, maxAge: 60 })).toBe(
+			'no-store, max-age=60',
 		);
 	});
 
-	it('rejects an empty options object', () => {
-		expect(() => cacheControl({})).toThrow(/at least one directive/);
+	it('serializes an empty options object as empty string', () => {
+		expect(cacheControl({})).toBe('');
 	});
 });
 
@@ -97,8 +97,8 @@ describe('csp', () => {
 		);
 	});
 
-	it('rejects an empty options object', () => {
-		expect(() => csp({})).toThrow(/at least one directive/);
+	it('serializes an empty options object as empty string', () => {
+		expect(csp({})).toBe('');
 	});
 });
 

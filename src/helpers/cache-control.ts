@@ -57,20 +57,6 @@ export function cacheControl(options: CacheControlOptions): string {
 		parts.push(`stale-if-error=${options.staleIfError}`);
 	}
 
-	if (parts.length === 0) {
-		throw new Error('cacheControl(): at least one directive must be set.');
-	}
-	if (options.public && options.private) {
-		throw new Error(
-			'cacheControl(): `public` and `private` are mutually exclusive.',
-		);
-	}
-	if (options.noStore && (options.maxAge !== undefined || options.immutable)) {
-		throw new Error(
-			'cacheControl(): `noStore` makes `maxAge`/`immutable` meaningless — pick one.',
-		);
-	}
-
 	return parts.join(', ');
 }
 

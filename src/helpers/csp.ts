@@ -82,10 +82,6 @@ export function csp(options: CspOptions): string {
 	if (options.reportUri) parts.push(`report-uri ${options.reportUri}`);
 	if (options.reportTo) parts.push(`report-to ${options.reportTo}`);
 
-	if (parts.length === 0) {
-		throw new Error('csp(): at least one directive must be set.');
-	}
-
 	return parts.join('; ');
 }
 
