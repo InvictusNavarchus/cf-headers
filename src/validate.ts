@@ -69,6 +69,40 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
         });
       }
 
+      // Security warning checks
+      const lowerName = name.toLowerCase();
+      const stringValue = String(value);
+
+      if (lowerName === "access-control-allow-origin" && stringValue === "*" && rule.path === "/*") {
+        issues.push({
+          level: "warning",
+          message: "Applying `Access-Control-Allow-Origin: *` to `/*` may expose sensitive routes. Consider scoping this to a specific path like `/assets/*` (or using `corsPreset(\"/assets/*\")`).",
+          ruleIndex,
+        });
+      }
+
+      if (lowerName === "content-security-policy" && !isDetach(value)) {
+        const hasUnsafeInline = stringValue.includes("'unsafe-inline'");
+        const hasNonceOrHash = stringValue.includes("'nonce-") ||
+          /'sha(256|384|512)-/.test(stringValue) ||
+          stringValue.includes("'strict-dynamic'");
+
+        if (hasUnsafeInline && !hasNonceOrHash) {
+          issues.push({
+            level: "warning",
+            message: "Content-Security-Policy contains `'unsafe-inline'` without a nonce, hash, or `'strict-dynamic'`. This disables modern XSS protections.",
+            ruleIndex,
+          });
+        }
+        if (stringValue.includes("'unsafe-eval'")) {
+          issues.push({
+            level: "warning",
+            message: "Content-Security-Policy contains `'unsafe-eval'`, which allows execution of arbitrary strings as code and increases XSS risk.",
+            ruleIndex,
+          });
+        }
+      }
+
       const info = getHeaderInfo(name);
       if (info) {
         if (info.status === "deprecated") {

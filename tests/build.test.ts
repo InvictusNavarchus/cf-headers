@@ -107,6 +107,40 @@ describe("validateConfig", () => {
     expect(() => assertNoErrors(issues)).not.toThrow();
   });
 
+  it("warns on wildcard Access-Control-Allow-Origin on path /*", () => {
+    const rules: HeaderRule[] = [{ path: "/*", headers: { "Access-Control-Allow-Origin": "*" } }];
+    const issues = validateConfig(rules);
+    expect(issues.some((i) => i.level === "warning" && i.message.includes("Access-Control-Allow-Origin: *"))).toBe(true);
+  });
+
+  it("does not warn on wildcard Access-Control-Allow-Origin on narrower paths", () => {
+    const rules: HeaderRule[] = [{ path: "/assets/*", headers: { "Access-Control-Allow-Origin": "*" } }];
+    const issues = validateConfig(rules);
+    expect(issues.some((i) => i.message.includes("Access-Control-Allow-Origin"))).toBe(false);
+  });
+
+  it("warns on unsafe-inline in Content-Security-Policy without nonce or hash", () => {
+    const rules: HeaderRule[] = [{ path: "/*", headers: { "Content-Security-Policy": "default-src 'self' 'unsafe-inline'" } }];
+    const issues = validateConfig(rules);
+    expect(issues.some((i) => i.level === "warning" && i.message.includes("unsafe-inline"))).toBe(true);
+  });
+
+  it("does not warn on unsafe-inline in Content-Security-Policy with nonce or hash", () => {
+    const rules: HeaderRule[] = [
+      { path: "/*", headers: { "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'nonce-123'" } },
+      { path: "/2", headers: { "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'sha256-abc'" } },
+      { path: "/3", headers: { "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'strict-dynamic'" } },
+    ];
+    const issues = validateConfig(rules);
+    expect(issues.some((i) => i.message.includes("unsafe-inline"))).toBe(false);
+  });
+
+  it("warns on unsafe-eval in Content-Security-Policy", () => {
+    const rules: HeaderRule[] = [{ path: "/*", headers: { "Content-Security-Policy": "default-src 'self' 'unsafe-eval'" } }];
+    const issues = validateConfig(rules);
+    expect(issues.some((i) => i.level === "warning" && i.message.includes("unsafe-eval"))).toBe(true);
+  });
+
   it("passes clean on a valid, non-deprecated rule set", () => {
     const rules: HeaderRule[] = [{ path: "/assets/*", headers: { "Cache-Control": "public, max-age=3600" } }];
     const issues = validateConfig(rules);

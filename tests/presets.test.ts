@@ -103,5 +103,38 @@ describe("presets", () => {
     const p = securityHeadersPreset();
     expect(p.headers["X-Content-Type-Options"]).toBe("nosniff");
     expect(typeof p.headers["Content-Security-Policy"]).toBe("string");
+    expect(p.headers["Strict-Transport-Security"]).toBe("max-age=31536000");
+    expect(p.headers["Permissions-Policy"]).toBe("camera=(), microphone=(), geolocation=()");
+  });
+
+  it("securityHeadersPreset supports custom HSTS config", () => {
+    const p = securityHeadersPreset("/*", {
+      hsts: { maxAge: 600, includeSubDomains: true, preload: true },
+    });
+    expect(p.headers["Strict-Transport-Security"]).toBe("max-age=600; includeSubDomains; preload");
+  });
+
+  it("securityHeadersPreset supports disabling HSTS", () => {
+    const p = securityHeadersPreset("/*", { hsts: false });
+    expect(p.headers["Strict-Transport-Security"]).toBeUndefined();
+  });
+
+  it("securityHeadersPreset supports boolean true HSTS", () => {
+    const p = securityHeadersPreset("/*", { hsts: true });
+    expect(p.headers["Strict-Transport-Security"]).toBe("max-age=31536000");
+  });
+
+  it("securityHeadersPreset supports custom permissions policy", () => {
+    const p = securityHeadersPreset("/*", {
+      permissions: { camera: ["self"] },
+    });
+    expect(p.headers["Permissions-Policy"]).toContain("camera=(self)");
+    expect(p.headers["Permissions-Policy"]).toContain("microphone=()");
+  });
+
+  it("securityHeadersPreset supports backward compatibility with raw CspOptions", () => {
+    const p = securityHeadersPreset("/*", { scriptSrc: ["'self'"] });
+    expect(p.headers["Content-Security-Policy"]).toContain("script-src 'self'");
+    expect(p.headers["Strict-Transport-Security"]).toBe("max-age=31536000");
   });
 });
