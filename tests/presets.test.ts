@@ -23,6 +23,19 @@ describe('cacheControl', () => {
 		);
 	});
 
+	it('supports stale-while-revalidate and stale-if-error directives', () => {
+		expect(
+			cacheControl({
+				public: true,
+				maxAge: 3600,
+				staleWhileRevalidate: 60,
+				staleIfError: 300,
+			}),
+		).toBe(
+			'public, max-age=3600, stale-while-revalidate=60, stale-if-error=300',
+		);
+	});
+
 	it("matches Cloudflare's fingerprinted-asset example", () => {
 		expect(immutableAssetCacheControl()).toBe(
 			'public, max-age=31536000, immutable',
@@ -63,6 +76,18 @@ describe('csp', () => {
 	it('appends bare directives without a value', () => {
 		expect(csp({ defaultSrc: ["'self'"], upgradeInsecureRequests: true })).toBe(
 			"default-src 'self'; upgrade-insecure-requests",
+		);
+	});
+
+	it('supports reportUri and reportTo options', () => {
+		expect(
+			csp({
+				defaultSrc: ["'self'"],
+				reportUri: 'https://example.report-uri.com/r/d/csp/enforce',
+				reportTo: 'default-endpoint',
+			}),
+		).toBe(
+			"default-src 'self'; report-uri https://example.report-uri.com/r/d/csp/enforce; report-to default-endpoint",
 		);
 	});
 

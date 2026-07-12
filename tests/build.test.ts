@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	generateHeadersFile,
+	getRenderedLines,
 	MAX_LINE_LENGTH,
 	MAX_RULES,
 } from '../src/build.js';
@@ -266,6 +267,47 @@ describe('validateConfig', () => {
 	it('assertNoErrors throws with details when errors are present', () => {
 		const rules: HeaderRule[] = [{ path: '', headers: {} }];
 		const issues = validateConfig(rules);
-		expect(() => assertNoErrors(issues)).toThrow(/invalid configuration/);
+		expect(() => assertNoErrors(issues)).toThrow(
+			/invalid configuration:\n\s+\[rule 0\] Rule is missing a path/,
+		);
+	});
+
+	it('flags a rule with an empty or whitespace path', () => {
+		const rules: HeaderRule[] = [
+			{ path: '', headers: { 'X-Test': '1' } },
+			{ path: '   ', headers: { 'X-Test': '2' } },
+		];
+		const issues = validateConfig(rules);
+		expect(issues).toHaveLength(2);
+		expect(issues[0]?.message).toBe('Rule is missing a path.');
+		expect(issues[0]?.ruleIndex).toBe(0);
+		expect(issues[1]?.message).toBe('Rule is missing a path.');
+		expect(issues[1]?.ruleIndex).toBe(1);
+	});
+});
+
+describe('getRenderedLines', () => {
+	it('returns only non-empty lines from the rendered file', () => {
+		const rules: HeaderRule[] = [
+			{
+				path: '/page',
+				comment: 'test comment',
+				headers: { 'X-Header-1': 'val1', 'X-Header-2': 'val2' },
+			},
+			{
+				path: '/other',
+				headers: { 'X-Header-3': 'val3' },
+			},
+		];
+
+		const lines = getRenderedLines(rules);
+		expect(lines).toEqual([
+			'# test comment',
+			'/page',
+			'  X-Header-1: val1',
+			'  X-Header-2: val2',
+			'/other',
+			'  X-Header-3: val3',
+		]);
 	});
 });

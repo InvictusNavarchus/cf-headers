@@ -19,7 +19,7 @@ function printIssues(issues: ValidationIssue[]): void {
 	}
 }
 
-async function runBuild(options: {
+export async function runBuild(options: {
 	config?: string;
 	outDir?: string;
 	strict?: boolean;
@@ -63,7 +63,10 @@ async function runBuild(options: {
 	);
 }
 
-function runListHeaders(options: { category?: string; status?: string }): void {
+export function runListHeaders(options: {
+	category?: string;
+	status?: string;
+}): void {
 	const categoryFilter = options.category;
 	const statusFilter = options.status;
 
@@ -79,7 +82,7 @@ function runListHeaders(options: { category?: string; status?: string }): void {
 	console.log(`\n${rows.length} header(s).`);
 }
 
-function runInspect(name: string | undefined): void {
+export function runInspect(name: string | undefined): void {
 	if (!name) {
 		console.error('[cf-headers] Usage: cf-headers inspect <header-name>');
 		process.exitCode = 1;
@@ -103,7 +106,7 @@ function runInspect(name: string | undefined): void {
 	console.log(`  reference:   ${info.referenceUrl}`);
 }
 
-async function main(): Promise<void> {
+export async function runCli(argv: string[]): Promise<void> {
 	const cli = cac('cf-headers');
 
 	cli
@@ -151,13 +154,21 @@ async function main(): Promise<void> {
 	cli.help();
 	cli.version('0.1.0');
 
-	cli.parse(process.argv, { run: false });
+	cli.parse(argv, { run: false });
 	await cli.runMatchedCommand();
 }
 
-main().catch((error: unknown) => {
-	console.error(
-		`[cf-headers] ${error instanceof Error ? error.message : String(error)}`,
-	);
-	process.exitCode = 1;
-});
+if (
+	process.argv[1] &&
+	(path.basename(process.argv[1]) === 'cli.ts' ||
+		path.basename(process.argv[1]) === 'cli.js' ||
+		path.basename(process.argv[1]) === 'cli.mjs' ||
+		path.basename(process.argv[1]) === 'cf-headers')
+) {
+	runCli(process.argv).catch((error: unknown) => {
+		console.error(
+			`[cf-headers] ${error instanceof Error ? error.message : String(error)}`,
+		);
+		process.exitCode = 1;
+	});
+}

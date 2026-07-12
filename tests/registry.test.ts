@@ -42,6 +42,8 @@ describe('HEADERS_REGISTRY', () => {
 	it('returns undefined for unknown/custom headers', () => {
 		expect(getHeaderInfo('X-My-Custom-Header')).toBeUndefined();
 		expect(isKnownHeader('X-My-Custom-Header')).toBe(false);
+		expect(isKnownHeader('Cache-Control')).toBe(true);
+		expect(isKnownHeader('cache-control')).toBe(true);
 	});
 
 	it('filters by category and status', () => {
