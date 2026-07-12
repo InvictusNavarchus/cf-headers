@@ -134,12 +134,12 @@ export function dynamicContentPreset(path = '/*'): HeaderRule {
 function resolveSecurityOption<T extends string>(
 	value: boolean | T | undefined,
 	trueValue: T,
-	undefinedValue?: T,
+	...args: [undefinedValue?: T]
 ): T | undefined {
 	if (value === false) return undefined;
 	if (value === true) return trueValue;
 	if (value === undefined) {
-		return arguments.length >= 3 ? undefinedValue : trueValue;
+		return args.length > 0 ? args[0] : trueValue;
 	}
 	return value;
 }
