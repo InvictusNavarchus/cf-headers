@@ -100,7 +100,7 @@ export function securityHeadersPreset(
 		}
 	}
 
-	const headers: Record<string, any> = {
+	const headers: HeaderRule['headers'] = {
 		'X-Content-Type-Options': 'nosniff',
 		'Referrer-Policy': 'strict-origin-when-cross-origin',
 		'Content-Security-Policy': strictCsp(cspOpts),

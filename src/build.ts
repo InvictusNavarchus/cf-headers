@@ -47,7 +47,7 @@ function serializeRule(rule: HeaderRule): string {
  */
 export function generateHeadersFile(rules: HeaderRule[]): string {
 	const blocks = rules.map(serializeRule);
-	return blocks.join('\n\n') + '\n';
+	return `${blocks.join('\n\n')}\n`;
 }
 
 /** Every physical line of the rendered file, useful for line-length checks. */
