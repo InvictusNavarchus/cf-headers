@@ -5,6 +5,7 @@
     "": {
       "name": "cf-headers",
       "dependencies": {
+        "cac": "^7.0.0",
         "esbuild": "^0.28.1",
       },
       "devDependencies": {

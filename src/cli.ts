@@ -5,23 +5,8 @@ import { getHeaderInfo, HEADERS_REGISTRY } from './registry.js';
 import { assertNoErrors, validateConfig } from './validate.js';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
-import { parseArgs } from 'node:util';
+import { cac } from 'cac';
 import type { ValidationIssue } from './types.js';
-
-const HELP = `cf-headers — type-safe _headers generator for Cloudflare Pages & Workers
-
-Usage:
-  cf-headers [build]                Generate _headers from your config file
-  cf-headers list-headers           Print the full header catalog
-  cf-headers inspect <name>         Show metadata for a single header
-  cf-headers --help                 Show this message
-
-Options for "build" (the default command):
-  -c, --config <path>   Path to a cf-headers.config.{ts,js,mjs} file
-                         (default: search the current directory)
-  -o, --out-dir <dir>   Override the config's outDir
-  --no-strict           Only warn on validation issues instead of failing
-`;
 
 function printIssues(issues: ValidationIssue[]): void {
 	for (const issue of issues) {
@@ -36,11 +21,11 @@ function printIssues(issues: ValidationIssue[]): void {
 
 async function runBuild(options: {
 	config?: string;
-	'out-dir'?: string;
+	outDir?: string;
 	strict?: boolean;
 }): Promise<void> {
 	const configPath = options.config;
-	const outDirOverride = options['out-dir'];
+	const outDirOverride = options.outDir;
 	const strictOverride = options.strict;
 
 	const cwd = process.cwd();
@@ -119,81 +104,55 @@ function runInspect(name: string | undefined): void {
 }
 
 async function main(): Promise<void> {
-	const parsed = (() => {
-		try {
-			return parseArgs({
-				args: process.argv.slice(2),
-				options: {
-					help: {
-						type: 'boolean',
-						short: 'h',
-					},
-					config: {
-						type: 'string',
-						short: 'c',
-					},
-					'out-dir': {
-						type: 'string',
-						short: 'o',
-					},
-					strict: {
-						type: 'boolean',
-					},
-					category: {
-						type: 'string',
-					},
-					status: {
-						type: 'string',
-					},
-				},
-				allowPositionals: true,
+	const cli = cac('cf-headers');
+
+	cli
+		.option(
+			'-c, --config <path>',
+			'Path to a cf-headers.config.{ts,js,mjs} file',
+		)
+		.option('-o, --out-dir <dir>', "Override the config's outDir")
+		.option('--strict', 'Enable strict validation (default: true)');
+
+	cli
+		.command('[command]', 'Generate _headers from your config file')
+		.alias('build')
+		.action(async (command, options) => {
+			if (command !== undefined && command !== 'build') {
+				console.error(`[cf-headers] Unknown command: ${command}`);
+				cli.outputHelp();
+				process.exitCode = 1;
+				return;
+			}
+			await runBuild({
+				config: options.config,
+				outDir: options.outDir,
+				strict: options.strict,
 			});
-		} catch (err) {
-			console.error(`[cf-headers] Error: ${(err as Error).message}`);
-			console.log(HELP);
-			process.exitCode = 1;
-			return null;
-		}
-	})();
-
-	if (!parsed) {
-		return;
-	}
-
-	const { values, positionals } = parsed;
-
-	if (values.help) {
-		console.log(HELP);
-		return;
-	}
-
-	const command = positionals[0];
-
-	if (command === 'list-headers') {
-		runListHeaders({
-			category: values.category,
-			status: values.status,
 		});
-		return;
-	}
 
-	if (command === 'inspect') {
-		runInspect(positionals[1]);
-		return;
-	}
-
-	if (command === undefined || command === 'build') {
-		await runBuild({
-			config: values.config,
-			'out-dir': values['out-dir'],
-			strict: values.strict,
+	cli
+		.command('list-headers', 'Print the full header catalog')
+		.option('--category <category>', 'Filter headers by category')
+		.option('--status <status>', 'Filter headers by status')
+		.action((options) => {
+			runListHeaders({
+				category: options.category,
+				status: options.status,
+			});
 		});
-		return;
-	}
 
-	console.error(`[cf-headers] Unknown command: ${command}`);
-	console.log(HELP);
-	process.exitCode = 1;
+	cli
+		.command('inspect <name>', 'Show metadata for a single header')
+		.action((name) => {
+			runInspect(name);
+		});
+
+	cli.help();
+	cli.version('0.1.0');
+
+	cli.parse(process.argv, { run: false });
+	await cli.runMatchedCommand();
 }
 
 main().catch((error: unknown) => {
