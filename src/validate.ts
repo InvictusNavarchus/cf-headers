@@ -69,6 +69,14 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
 		}
 
 		for (const [name, value] of Object.entries(rule.headers)) {
+			if (typeof value === 'number' && !Number.isFinite(value)) {
+				issues.push({
+					level: 'error',
+					message: `Header "${name}" has a non-finite number value: ${value}.`,
+					ruleIndex,
+				});
+			}
+
 			const line = isDetach(value)
 				? `  ! ${name}`
 				: `  ${name}: ${String(value)}`;

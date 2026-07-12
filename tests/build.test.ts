@@ -284,6 +284,31 @@ describe('validateConfig', () => {
 		expect(issues[1]?.message).toBe('Rule is missing a path.');
 		expect(issues[1]?.ruleIndex).toBe(1);
 	});
+
+	it('flags non-finite numbers as errors', () => {
+		const rules: HeaderRule[] = [
+			{
+				path: '/*',
+				headers: {
+					'X-Test-NaN': NaN,
+					'X-Test-Inf': Infinity,
+					'X-Test-NegInf': -Infinity,
+				},
+			},
+		];
+		const issues = validateConfig(rules);
+		expect(issues).toHaveLength(3);
+		expect(issues.every((i) => i.level === 'error')).toBe(true);
+		expect(issues[0]?.message).toBe(
+			'Header "X-Test-NaN" has a non-finite number value: NaN.',
+		);
+		expect(issues[1]?.message).toBe(
+			'Header "X-Test-Inf" has a non-finite number value: Infinity.',
+		);
+		expect(issues[2]?.message).toBe(
+			'Header "X-Test-NegInf" has a non-finite number value: -Infinity.',
+		);
+	});
 });
 
 describe('getRenderedLines', () => {
