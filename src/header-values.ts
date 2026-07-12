@@ -1,5 +1,3 @@
-import type { KnownHeaderName } from './registry.js';
-
 export type ReferrerPolicyValue =
 	| 'no-referrer'
 	| 'no-referrer-when-downgrade'
@@ -54,10 +52,6 @@ export interface TypedHeaderValues {
 	'X-Content-Type-Options': XContentTypeOptionsValue;
 }
 
-/** Resolves the value type for a given header name: narrowed if we know its
- * vocabulary, otherwise a plain string (still fully valid to pass). */
 export type HeaderValueFor<K extends string> = K extends keyof TypedHeaderValues
 	? TypedHeaderValues[K]
-	: K extends KnownHeaderName
-		? string
-		: string;
+	: string;
