@@ -2,9 +2,9 @@ import { defineConfig } from 'vite';
 import { cfHeaders } from 'cf-headers/vite';
 import {
 	corsPreset,
+	dynamicContentPreset,
 	immutableAssetsPreset,
 	noIndexPreviewDomainPreset,
-	rule,
 	securityHeadersPreset,
 } from 'cf-headers';
 
@@ -16,11 +16,7 @@ export default defineConfig({
 				immutableAssetsPreset('/assets/*'),
 				corsPreset('/fonts/*'),
 				noIndexPreviewDomainPreset('https://:project.pages.dev/*'),
-				rule(
-					'/api/*',
-					{ 'Cache-Control': 'no-store' },
-					'API responses should never be cached by the browser.',
-				),
+				dynamicContentPreset('/api/*'),
 			],
 		}),
 	],

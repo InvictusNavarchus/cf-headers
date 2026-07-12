@@ -57,6 +57,7 @@ export {
 	cacheControl,
 	immutableAssetCacheControl,
 	noCacheControl,
+	noStoreCacheControl,
 } from './helpers/cache-control.js';
 export type { CacheControlOptions } from './helpers/cache-control.js';
 export { csp, strictCsp } from './helpers/csp.js';
@@ -73,9 +74,14 @@ export type {
 // ---- Presets -------------------------------------------------------------
 export {
 	corsPreset,
+	dynamicContentPreset,
 	immutableAssetsPreset,
 	noIndexPreviewDomainPreset,
 	securityHeadersPreset,
+} from './presets.js';
+export type {
+	HstsOptions,
+	SecurityHeadersPresetOptions,
 } from './presets.js';
 
 /**

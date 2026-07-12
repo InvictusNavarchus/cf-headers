@@ -3,6 +3,7 @@ import {
 	cacheControl,
 	immutableAssetCacheControl,
 	noCacheControl,
+	noStoreCacheControl,
 } from '../src/helpers/cache-control.js';
 import { csp, strictCsp } from '../src/helpers/csp.js';
 import {
@@ -11,6 +12,7 @@ import {
 } from '../src/helpers/permissions-policy.js';
 import {
 	corsPreset,
+	dynamicContentPreset,
 	immutableAssetsPreset,
 	noIndexPreviewDomainPreset,
 	securityHeadersPreset,
@@ -44,6 +46,10 @@ describe('cacheControl', () => {
 
 	it('builds a no-cache preset', () => {
 		expect(noCacheControl()).toBe('public, max-age=0, must-revalidate');
+	});
+
+	it('builds a no-store preset', () => {
+		expect(noStoreCacheControl()).toBe('no-cache, no-store, must-revalidate');
 	});
 
 	it('serializes public+private together', () => {
@@ -156,14 +162,52 @@ describe('presets', () => {
 		expect(p.headers['Permissions-Policy']).toBe(
 			'camera=(), microphone=(), geolocation=()',
 		);
+		expect(p.headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
+		expect(p.headers['Cross-Origin-Resource-Policy']).toBe('same-origin');
+		expect(p.headers['Cross-Origin-Embedder-Policy']).toBeUndefined();
+	});
+
+	it('dynamicContentPreset sets no-store caching headers', () => {
+		const p = dynamicContentPreset();
+		expect(p.path).toBe('/*');
+		expect(p.headers['Cache-Control']).toBe(
+			'no-cache, no-store, must-revalidate',
+		);
 	});
 
 	it('securityHeadersPreset supports custom HSTS config', () => {
 		const p = securityHeadersPreset('/*', {
-			hsts: { maxAge: 600, includeSubDomains: true, preload: true },
+			hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
 		});
 		expect(p.headers['Strict-Transport-Security']).toBe(
-			'max-age=600; includeSubDomains; preload',
+			'max-age=31536000; includeSubDomains; preload',
+		);
+	});
+
+	it('securityHeadersPreset auto-includes includeSubDomains when preload is true', () => {
+		const p = securityHeadersPreset('/*', {
+			hsts: { preload: true },
+		});
+		expect(p.headers['Strict-Transport-Security']).toBe(
+			'max-age=31536000; includeSubDomains; preload',
+		);
+	});
+
+	it('securityHeadersPreset throws if preload is true but includeSubDomains is false', () => {
+		expect(() =>
+			securityHeadersPreset('/*', {
+				hsts: { preload: true, includeSubDomains: false },
+			}),
+		).toThrow('HSTS preload requires includeSubDomains to be enabled.');
+	});
+
+	it('securityHeadersPreset throws if preload is true but maxAge is less than 1 year', () => {
+		expect(() =>
+			securityHeadersPreset('/*', {
+				hsts: { preload: true, maxAge: 600 },
+			}),
+		).toThrow(
+			'HSTS preload requires a maxAge of at least 31536000 seconds (1 year).',
 		);
 	});
 
@@ -183,6 +227,30 @@ describe('presets', () => {
 		});
 		expect(p.headers['Permissions-Policy']).toContain('camera=(self)');
 		expect(p.headers['Permissions-Policy']).toContain('microphone=()');
+	});
+
+	it('securityHeadersPreset supports custom COOP, COEP, and CORP settings', () => {
+		const p = securityHeadersPreset('/*', {
+			coop: 'same-origin-allow-popups',
+			coep: 'require-corp',
+			corp: 'same-site',
+		});
+		expect(p.headers['Cross-Origin-Opener-Policy']).toBe(
+			'same-origin-allow-popups',
+		);
+		expect(p.headers['Cross-Origin-Embedder-Policy']).toBe('require-corp');
+		expect(p.headers['Cross-Origin-Resource-Policy']).toBe('same-site');
+	});
+
+	it('securityHeadersPreset supports disabling COOP, COEP, and CORP', () => {
+		const p = securityHeadersPreset('/*', {
+			coop: false,
+			coep: false,
+			corp: false,
+		});
+		expect(p.headers['Cross-Origin-Opener-Policy']).toBeUndefined();
+		expect(p.headers['Cross-Origin-Embedder-Policy']).toBeUndefined();
+		expect(p.headers['Cross-Origin-Resource-Policy']).toBeUndefined();
 	});
 
 	it('securityHeadersPreset supports backward compatibility with raw CspOptions', () => {

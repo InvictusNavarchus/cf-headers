@@ -175,10 +175,12 @@ Ready-made rules for the scenarios that come up on nearly every project:
 
 | Preset | What it does |
 |---|---|
-| `securityHeadersPreset(path?, cspOverrides?)` | `nosniff`, a strict-by-default CSP, a conservative `Permissions-Policy`, and a safe `Referrer-Policy` |
+| `securityHeadersPreset(path?, options?)` | `nosniff`, strict CSP, Permissions-Policy, Referrer-Policy, and secure COOP/CORP defaults |
+| `dynamicContentPreset(path?)` | `no-store, no-cache, must-revalidate` headers for HTML entry points or API routes |
 | `immutableAssetsPreset(path?)` | Year-long, `immutable` caching for content-hashed build output |
 | `corsPreset(path?)` | `Access-Control-Allow-Origin: *` |
 | `noIndexPreviewDomainPreset(domainPattern?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain |
+
 
 ## Exploring the header catalog
 

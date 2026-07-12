@@ -70,3 +70,8 @@ export function immutableAssetCacheControl(): string {
 export function noCacheControl(): string {
 	return cacheControl({ public: true, maxAge: 0, mustRevalidate: true });
 }
+
+/** Preset for dynamic content / API routes that should never be cached. */
+export function noStoreCacheControl(): string {
+	return cacheControl({ noStore: true, noCache: true, mustRevalidate: true });
+}
