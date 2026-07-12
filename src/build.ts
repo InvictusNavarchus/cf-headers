@@ -14,7 +14,10 @@ function isDetach(value: HeaderDirective): value is { detach: true } {
 	);
 }
 
-function serializeHeaderLine(name: string, value: HeaderDirective): string {
+export function serializeHeaderLine(
+	name: string,
+	value: HeaderDirective,
+): string {
 	if (isDetach(value)) {
 		return `  ! ${name}`;
 	}

@@ -1,6 +1,6 @@
-import { MAX_LINE_LENGTH, MAX_RULES } from './build.js';
+import { MAX_LINE_LENGTH, MAX_RULES, serializeHeaderLine } from './build.js';
 import { getHeaderInfo } from './registry.js';
-import type { HeaderRule, ValidationIssue } from './types.js';
+import type { HeaderDirective, HeaderRule, ValidationIssue } from './types.js';
 
 const ABSOLUTE_URL_WITH_PORT = /^https?:\/\/[^/]+:\d+/;
 const NON_HTTPS_ABSOLUTE_URL = /^http:\/\//;
@@ -68,7 +68,7 @@ function validateGenericHeader(
 		});
 	}
 
-	const line = isDetach(value) ? `  ! ${name}` : `  ${name}: ${String(value)}`;
+	const line = serializeHeaderLine(name, value as HeaderDirective);
 	if (line.length > MAX_LINE_LENGTH) {
 		issues.push({
 			level: 'error',
