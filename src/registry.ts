@@ -1,9 +1,68 @@
-import type {
-	HeaderCategory,
-	HeaderContext,
-	HeaderInfo,
-	HeaderStatus,
-} from './types.js';
+export type HeaderCategory =
+	| 'authentication'
+	| 'caching'
+	| 'conditionals'
+	| 'connection-management'
+	| 'content-negotiation'
+	| 'controls'
+	| 'cookies'
+	| 'cors'
+	| 'downloads'
+	| 'integrity'
+	| 'message-body'
+	| 'preferences'
+	| 'proxies'
+	| 'range-requests'
+	| 'redirects'
+	| 'request-context'
+	| 'response-context'
+	| 'security'
+	| 'fetch-metadata'
+	| 'storage-access'
+	| 'client-hints'
+	| 'compression-dictionary'
+	| 'attribution-reporting'
+	| 'privacy'
+	| 'topics-api'
+	| 'websocket'
+	| 'reporting'
+	| 'transfer-coding'
+	| 'non-standard'
+	| 'other';
+
+/**
+ * Standardization / support status for a header.
+ *
+ * - `standard`      Defined in a stable spec and broadly supported.
+ * - `experimental`  Behind a spec draft, origin trial, or limited rollout.
+ * - `deprecated`     Superseded or removed; kept for legacy interop only.
+ * - `non-standard`  Proprietary/convention-based, not part of a formal spec.
+ */
+export type HeaderStatus =
+	| 'standard'
+	| 'experimental'
+	| 'deprecated'
+	| 'non-standard';
+
+/** Which side of the exchange a header is normally sent on. */
+export type HeaderContext = 'request' | 'response' | 'both';
+
+/** Static metadata describing a single HTTP header. */
+export interface HeaderInfo {
+	/** Canonical, correctly-cased header name, e.g. "Content-Security-Policy". */
+	readonly name: string;
+	readonly category: HeaderCategory;
+	readonly context: HeaderContext;
+	readonly status: HeaderStatus;
+	/** One-line, plain-English explanation of what the header does. */
+	readonly description: string;
+	/** Set when this header is realistically something you'd emit from a
+	 * static-hosting `_headers` file (i.e. it is response-oriented and not
+	 * purely informational/request-only). */
+	readonly settableViaHeadersFile: boolean;
+	/** Absolute URL to further reading. */
+	readonly referenceUrl: string;
+}
 
 const MDN_BASE =
 	'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers';

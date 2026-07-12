@@ -19,7 +19,7 @@ export type {
 	HeaderContext,
 	HeaderInfo,
 	HeaderStatus,
-} from './types.js';
+} from './registry.js';
 export type {
 	CrossOriginEmbedderPolicyValue,
 	CrossOriginOpenerPolicyValue,
