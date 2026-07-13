@@ -53,6 +53,11 @@
 		"example:cli": "bun run example:basic && bun run example:production",
 		"prepublishOnly": "npm run typecheck && npm run test && npm run build"
 	},
+	"release-it": {
+		"npm": {
+			"publish": false
+		}
+	},
 	"dependencies": {
 		"cac": "^7.0.0"
 	},
