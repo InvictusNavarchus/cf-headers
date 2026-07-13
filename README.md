@@ -14,7 +14,7 @@ Type-safe `_headers` file generator for **Cloudflare Pages** and **Workers stati
   `Cache-Control`, `Content-Security-Policy`, `Permissions-Policy`
 - ✅ Validates against Cloudflare's documented limits (100 rules, 2000
   chars/line, HTTPS-only absolute URLs, single splat per path) before you ship
-- ✅ Works from a config file + CLI, a Vite plugin, or plain Node — pick
+- ✅ Works as a Vite plugin or plain Node programmatic API — pick
   whichever fits your build
 
 ```
@@ -37,53 +37,12 @@ npm install --save-dev @navarchus/cf-headers
   ```bash
   npm install --save-dev vite
   ```
-* **For TypeScript Config Files (`cf-headers.config.ts` / `.mts`)**: The CLI uses `esbuild` to compile your configuration file in-memory. If your project uses Vite (or SvelteKit, Astro, Remix, etc.), `esbuild` is already installed transitively. Otherwise, install it locally:
-  ```bash
-  npm install --save-dev esbuild
-  ```
-  *(Note: If you use a JavaScript configuration file like `cf-headers.config.js` or `.mjs`, no transpiler is required and you do not need to install `esbuild` at all).*
 
 ## Quick start
 
-**1. Create a config file** (`cf-headers.config.ts`) at your project root:
+### Vite Plugin
 
-```ts
-import {
-  defineConfig,
-  securityHeadersPreset,
-  immutableAssetsPreset,
-  corsPreset,
-} from "cf-headers";
-
-export default defineConfig({
-  outDir: "dist", // wherever your framework outputs static files
-  rules: [
-    securityHeadersPreset("/*"),
-    immutableAssetsPreset("/assets/*"),
-    corsPreset("/fonts/*"),
-  ],
-});
-```
-
-**2. Run it after your build:**
-
-```bash
-npx @navarchus/cf-headers
-```
-
-That writes a Cloudflare-ready `dist/_headers` file. Add it to your build
-script:
-
-```json
-{
-  "scripts": {
-    "build": "vite build && cf-headers"
-  }
-}
-```
-
-Or skip the CLI entirely and use the **Vite plugin**, which hooks into
-`closeBundle` automatically:
+If your project uses Vite, add the plugin to your `vite.config.ts`. It hooks into the `closeBundle` step to automatically validate and write your `_headers` file:
 
 ```ts
 // vite.config.ts
@@ -94,21 +53,28 @@ import { securityHeadersPreset, immutableAssetsPreset } from "cf-headers";
 export default defineConfig({
   plugins: [
     cfHeaders({
-      rules: [securityHeadersPreset("/*"), immutableAssetsPreset("/assets/*")],
+      rules: [
+        securityHeadersPreset("/*"),
+        immutableAssetsPreset("/assets/*")
+      ],
     }),
   ],
 });
 ```
 
-Not using Vite? Call the programmatic API from any Node build script
-(webpack, esbuild, Next.js, a plain `postbuild` script, ...):
+### Programmatic API
+
+Not using Vite? You can call the programmatic API from any Node build or post-build script (Webpack, Esbuild, Next.js, etc.):
 
 ```ts
-import { writeHeadersFile, rule } from "cf-headers";
+import { writeHeadersFile, securityHeadersPreset, immutableAssetsPreset } from "cf-headers";
 
 await writeHeadersFile({
-  outDir: "dist",
-  rules: [rule("/*", { "X-Content-Type-Options": "nosniff" })],
+  outDir: "dist", // path to your built static assets
+  rules: [
+    securityHeadersPreset("/*"),
+    immutableAssetsPreset("/assets/*"),
+  ],
 });
 ```
 
@@ -199,18 +165,9 @@ Ready-made rules for the scenarios that come up on nearly every project:
 | `noIndexPreviewDomainPreset(domainPattern?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain |
 
 
-## Exploring the header catalog
+## Exploring the header catalog programmatically
 
-```bash
-npx @navarchus/cf-headers list-headers                  # every header
-npx @navarchus/cf-headers list-headers --category=cors   # filter by category
-npx @navarchus/cf-headers list-headers --status=deprecated
-npx @navarchus/cf-headers inspect content-security-policy
-```
-
-`inspect` output includes status, category, whether the header is realistically
-something you'd set from a `_headers` file, a description, and an MDN link —
-the same data available programmatically:
+You can inspect header metadata (such as category, deprecation status, descriptions, and reference URLs) programmatically:
 
 ```ts
 import { getHeaderInfo, getHeadersByStatus } from "cf-headers";
@@ -239,26 +196,7 @@ Every build validates against Cloudflare's documented constraints and fails
 - absolute URLs that aren't `https://` or that specify a port
 - more than one `*` splat in a path
 
-Set `strict: false` in your config (or pass `--no-strict` to the CLI) to
-downgrade these to warnings instead of build failures.
-
-## CLI reference
-
-```
-cf-headers [build]              Generate _headers from your config file
-cf-headers list-headers         Print the full header catalog
-cf-headers inspect <name>       Show metadata for a single header
-cf-headers --help               Show usage
-
-Options for build:
-  -c, --config <path>   Path to a cf-headers.config.{ts,js,mjs} file
-  -o, --out-dir <dir>   Override the config's outDir
-  --no-strict           Only warn on validation issues instead of failing
-```
-
-`.ts` config files are transpiled on the fly. The CLI will dynamically resolve a local installation of `esbuild` (which is typically already present transitively in Vite-based projects, or can be installed via `npm install --save-dev esbuild`). 
-
-If you prefer a zero-dependency setup, write your configuration file as a `.js` or `.mjs` file, which Node.js loads natively.
+Set `strict: false` in your configuration to downgrade these to warnings instead of build failures.
 
 ## What this package doesn't do
 
