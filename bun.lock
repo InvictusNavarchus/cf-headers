@@ -4,12 +4,10 @@
   "workspaces": {
     "": {
       "name": "cf-headers",
-      "dependencies": {
-        "cac": "^7.0.0",
-      },
       "devDependencies": {
         "@biomejs/biome": "2.5.3",
         "@types/node": "^26.1.1",
+        "cf-headers": "link:.",
         "esbuild": "^0.28.1",
         "lefthook": "^2.1.10",
         "release-it": "^20.2.1",
@@ -19,11 +17,9 @@
         "vitest": "^4.1.10",
       },
       "peerDependencies": {
-        "esbuild": ">=0.19.0",
         "vite": ">=5.0.0",
       },
       "optionalPeers": [
-        "esbuild",
         "vite",
       ],
     },
@@ -338,6 +334,8 @@
     "c12": ["c12@3.3.3", "", { "dependencies": { "chokidar": "^5.0.0", "confbox": "^0.2.2", "defu": "^6.1.4", "dotenv": "^17.2.3", "exsolve": "^1.0.8", "giget": "^2.0.0", "jiti": "^2.6.1", "ohash": "^2.0.11", "pathe": "^2.0.3", "perfect-debounce": "^2.0.0", "pkg-types": "^2.3.0", "rc9": "^2.1.2" }, "peerDependencies": { "magicast": "*" }, "optionalPeers": ["magicast"] }, "sha512-750hTRvgBy5kcMNPdh95Qo+XUBeGo8C7nsKSmedDmaQI+E0r82DwHeM6vBewDe4rGFbnxoa4V9pw+sPh5+Iz8Q=="],
 
     "cac": ["cac@7.0.0", "", {}, "sha512-tixWYgm5ZoOD+3g6UTea91eow5z6AAHaho3g0V9CNSNb45gM8SmflpAc+GRd1InC4AqN/07Unrgp56Y94N9hJQ=="],
+
+    "cf-headers": ["cf-headers@root:", {}],
 
     "chai": ["chai@6.2.2", "", {}, "sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg=="],
 

@@ -46,9 +46,9 @@
 		"lint": "biome lint",
 		"format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
 		"release": "release-it",
-		"example:basic": "bun run build && node dist/cli.mjs --config examples/basic/cf-headers.config.ts --out-dir examples/basic && cat examples/basic/_headers",
-		"example:production": "bun run build && node dist/cli.mjs --config examples/production/cf-headers.config.ts --out-dir examples/production && cat examples/production/_headers",
-		"example:cli": "bun run example:basic && bun run example:production",
+		"example:basic": "bun run build && bunx vite build examples/basic && cat examples/basic/dist/_headers",
+		"example:production": "bun run build && bunx vite build examples/production && cat examples/production/dist/_headers",
+		"example:vite": "bun run example:basic && bun run example:production",
 		"prepublishOnly": "npm run typecheck && npm run test && npm run build"
 	},
 	"release-it": {
@@ -58,6 +58,7 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
+		"cf-headers": "link:.",
 		"@biomejs/biome": "2.5.3",
 		"@types/node": "^26.1.1",
 		"esbuild": "^0.28.1",
@@ -69,13 +70,9 @@
 		"vitest": "^4.1.10"
 	},
 	"peerDependencies": {
-		"esbuild": ">=0.19.0",
 		"vite": ">=5.0.0"
 	},
 	"peerDependenciesMeta": {
-		"esbuild": {
-			"optional": true
-		},
 		"vite": {
 			"optional": true
 		}
