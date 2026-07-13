@@ -1,5 +1,5 @@
 {
-	"name": "cf-headers",
+	"name": "@navarchus/cf-headers",
 	"version": "0.1.0",
 	"description": "Type-safe _headers file generator for Cloudflare Pages & Workers static assets, with a full catalog of HTTP response headers (status, deprecation, and reference info) and autocomplete for header names and values.",
 	"keywords": [

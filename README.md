@@ -26,7 +26,7 @@ Type-safe `_headers` file generator for **Cloudflare Pages** and **Workers stati
 ## Install
 
 ```bash
-npm install --save-dev cf-headers
+npm install --save-dev @navarchus/cf-headers
 ```
 
 ### Peer Dependencies (Optional)
