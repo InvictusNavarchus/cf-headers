@@ -68,7 +68,7 @@ export default defineConfig({
 **2. Run it after your build:**
 
 ```bash
-npx cf-headers
+npx @navarchus/cf-headers
 ```
 
 That writes a Cloudflare-ready `dist/_headers` file. Add it to your build
@@ -202,10 +202,10 @@ Ready-made rules for the scenarios that come up on nearly every project:
 ## Exploring the header catalog
 
 ```bash
-npx cf-headers list-headers                  # every header
-npx cf-headers list-headers --category=cors   # filter by category
-npx cf-headers list-headers --status=deprecated
-npx cf-headers inspect content-security-policy
+npx @navarchus/cf-headers list-headers                  # every header
+npx @navarchus/cf-headers list-headers --category=cors   # filter by category
+npx @navarchus/cf-headers list-headers --status=deprecated
+npx @navarchus/cf-headers inspect content-security-policy
 ```
 
 `inspect` output includes status, category, whether the header is realistically
