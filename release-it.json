@@ -4,6 +4,13 @@
 		"commitMessage": "chore(release): bump version to v${version}",
 		"tagAnnotation": "v${version}"
 	},
+	"hooks": {
+		"before:github:release": "bun pm pack --destination ./release-assets/"
+	},
+	"github": {
+		"release": true,
+		"assets": ["release-assets/*.tgz"]
+	},
 	"npm": {
 		"publish": false
 	}
