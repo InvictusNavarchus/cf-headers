@@ -1,0 +1,6 @@
+{
+	"$schema": "node_modules/release-it/schema/release-it.json",
+	"npm": {
+		"publish": false
+	}
+}
