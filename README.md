@@ -155,26 +155,14 @@ Ready-made rules for the scenarios that come up on nearly every project:
 | `noIndexPreviewDomainPreset(domainPattern?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain |
 
 
-## Exploring the header catalog programmatically
+## Catalog metadata
 
-You can inspect header metadata (such as category, deprecation status, descriptions, and reference URLs) programmatically:
+The same metadata that powers deprecation warnings is exported, so you can build tooling on top of it. E.g.,, a CI check that fails on deprecated headers in production rules, or a custom preset generator.
 
-```ts
-import { getHeaderInfo, getHeadersByStatus } from "cf-headers";
-
-getHeaderInfo("X-Frame-Options");
-// { name: "X-Frame-Options", status: "deprecated", category: "security", ... }
-
+\`\`\`ts
+import { getHeadersByStatus } from "cf-headers";
 getHeadersByStatus("deprecated"); // every deprecated header in the catalog
-```
-
-Deprecated and non-standard headers still work when used in a rule — you'll
-just get a build-time warning (not a failure) explaining why:
-
-```
-[cf-headers] warn (rule 0): "X-Frame-Options" is deprecated: Legacy clickjacking
-protection; superseded by CSP frame-ancestors.
-```
+\`\`\`
 
 ## Validation
 
