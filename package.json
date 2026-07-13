@@ -16,9 +16,7 @@
 	"license": "MIT",
 	"type": "module",
 	"sideEffects": false,
-	"bin": {
-		"cf-headers": "./dist/cli.mjs"
-	},
+
 	"types": "./dist/index.d.mts",
 	"exports": {
 		".": {
@@ -58,9 +56,7 @@
 			"publish": false
 		}
 	},
-	"dependencies": {
-		"cac": "^7.0.0"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.3",
 		"@types/node": "^26.1.1",

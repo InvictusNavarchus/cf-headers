@@ -3,7 +3,6 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { writeHeadersFile } from '../src/index.js';
-import { runBuild } from '../src/cli.js';
 
 describe('Integration Tests', () => {
 	let tempDir: string;
@@ -77,81 +76,6 @@ describe('Integration Tests', () => {
 			expect(result.issues.length).toBeGreaterThan(0);
 			const written = await fs.readFile(result.filePath, 'utf-8');
 			expect(written).toContain('Cache-Control: public');
-		});
-	});
-
-	describe('CLI runBuild', () => {
-		it('runs build and writes _headers file from a configuration', async () => {
-			const outDir = path.join(tempDir, 'dist-cli');
-
-			const configJsPath = path.join(tempDir, 'cf-headers.config.js');
-			await fs.writeFile(
-				configJsPath,
-				`export default {
-					outDir: '${outDir.replace(/\\/g, '\\\\')}',
-					rules: [
-						{ path: '/js/*', headers: { 'X-JS': 'yes' } }
-					]
-				};`,
-				'utf-8',
-			);
-
-			const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-			await runBuild({ config: configJsPath });
-
-			const filePath = path.join(outDir, '_headers');
-			const content = await fs.readFile(filePath, 'utf-8');
-			expect(content).toBe('/js/*\n  X-JS: yes\n');
-			expect(logSpy).toHaveBeenCalledWith(
-				expect.stringContaining('Wrote 1 rule(s)'),
-			);
-		});
-
-		it('applies command line overrides for outDir and strict options', async () => {
-			const configJsPath = path.join(tempDir, 'cf-headers.config.js');
-			const outDir = path.join(tempDir, 'dist-cli');
-			const overrideDir = path.join(tempDir, 'dist-override');
-
-			await fs.writeFile(
-				configJsPath,
-				`export default {
-					outDir: '${outDir.replace(/\\/g, '\\\\')}',
-					rules: [
-						{ path: '', headers: { 'X-JS': 'yes' } }
-					]
-				};`,
-				'utf-8',
-			);
-
-			vi.spyOn(console, 'log').mockImplementation(() => {});
-			vi.spyOn(console, 'error').mockImplementation(() => {});
-
-			await runBuild({
-				config: configJsPath,
-				outDir: overrideDir,
-				strict: false,
-			});
-
-			const filePath = path.join(overrideDir, '_headers');
-			expect(await fs.readFile(filePath, 'utf-8')).toContain('X-JS: yes');
-		});
-
-		it('exits with code 1 and prints error when no config file is found', async () => {
-			vi.spyOn(process, 'cwd').mockReturnValue(tempDir);
-			const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-			const prevExitCode = process.exitCode;
-			process.exitCode = undefined;
-
-			await runBuild({});
-
-			expect(errorSpy).toHaveBeenCalledWith(
-				expect.stringContaining('No config file found'),
-			);
-			expect(process.exitCode).toBe(1);
-
-			process.exitCode = prevExitCode;
 		});
 	});
 });
