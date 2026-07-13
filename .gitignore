@@ -5,4 +5,4 @@ dist/
 coverage/
 .cf-headers.config.*.mjs
 examples/**/_headers
-
+release-assets/
