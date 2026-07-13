@@ -1,5 +1,9 @@
 {
 	"$schema": "node_modules/release-it/schema/release-it.json",
+	"git": {
+		"commitMessage": "chore(release): bump version to v${version}",
+		"tagAnnotation": "v${version}"
+	},
 	"npm": {
 		"publish": false
 	}
