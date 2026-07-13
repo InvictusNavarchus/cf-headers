@@ -1,5 +1,8 @@
 # cf-headers
 
+![License](https://img.shields.io/github/license/InvictusNavarchus/cf-headers)
+![Version](https://img.shields.io/github/package-json/v/InvictusNavarchus/cf-headers)
+
 Type-safe `_headers` file generator for **Cloudflare Pages** and **Workers static assets**.
 
 - ✅ Autocomplete for **~150 HTTP headers**, each tagged with status
