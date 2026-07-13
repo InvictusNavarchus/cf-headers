@@ -5,23 +5,13 @@
 
 Type-safe `_headers` file generator for **Cloudflare Pages** and **Workers static assets**.
 
-- ✅ Autocomplete for **~150 HTTP headers**, each tagged with status
-  (`standard` / `experimental` / `deprecated` / `non-standard`), category,
-  and a plain-English description
-- ✅ Narrowed value types for common headers (`X-Frame-Options`,
-  `Referrer-Policy`, `Cross-Origin-*`, ...) — typos get caught at compile time
+- ✅ Autocomplete for **~150 HTTP headers**
 - ✅ Typed builders for the fiddly, string-assembled headers:
   `Cache-Control`, `Content-Security-Policy`, `Permissions-Policy`
-- ✅ Validates against Cloudflare's documented limits (100 rules, 2000
-  chars/line, HTTPS-only absolute URLs, single splat per path) before you ship
-- ✅ Works as a Vite plugin or plain Node programmatic API — pick
-  whichever fits your build
-
-```
-/*
-  X-Content-Type-Options: nosniff
-  Content-Security-Policy: default-src 'self'; object-src 'none'
-```
+- ✅ Secure presets for common security headers
+- ✅ Validates against Cloudflare's documented limits: 100 rules, 2000
+  chars/line, HTTPS-only absolute URLs, single splat per path
+- ✅ Works as a Vite plugin or plain Node programmatic API
 
 ## Install
 
