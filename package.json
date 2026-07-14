@@ -40,6 +40,7 @@
 		"build": "tsdown",
 		"dev": "tsdown --watch",
 		"test": "vitest run",
+		"test:coverage": "vitest --coverage",
 		"test:watch": "vitest",
 		"typecheck": "tsc --noEmit",
 		"lint": "biome lint",
@@ -54,6 +55,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.5.3",
 		"@types/node": "^26.1.1",
+		"@vitest/coverage-v8": "^4.1.10",
 		"cf-headers": "link:.",
 		"esbuild": "^0.28.1",
 		"knip": "^6.26.0",
