@@ -159,10 +159,10 @@ Ready-made rules for the scenarios that come up on nearly every project:
 
 The same metadata that powers deprecation warnings is exported, so you can build tooling on top of it. E.g.,, a CI check that fails on deprecated headers in production rules, or a custom preset generator.
 
-\`\`\`ts
+```ts
 import { getHeadersByStatus } from "cf-headers";
 getHeadersByStatus("deprecated"); // every deprecated header in the catalog
-\`\`\`
+```
 
 ## Validation
 
