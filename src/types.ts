@@ -62,7 +62,7 @@ export interface CfHeadersConfig {
 	 * framework's build output directory (e.g. `dist`, `build`, `public`).
 	 */
 	outDir: string;
-	rules: HeaderRule[];
+	rules: (HeaderRule | HeaderRule[])[];
 	/**
 	 * When true (default), rules that violate Cloudflare's documented limits
 	 * (100 rules, 2000 chars/line) throw. When false, they only warn.

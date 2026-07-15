@@ -5,7 +5,7 @@ import * as path from 'node:path';
 import type { Plugin } from 'vite';
 
 export interface CfHeadersVitePluginOptions {
-	rules: HeaderRule[];
+	rules: (HeaderRule | HeaderRule[])[];
 	/** Only warn (instead of failing the build) on validation issues. */
 	strict?: boolean;
 }

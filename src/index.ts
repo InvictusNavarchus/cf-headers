@@ -110,12 +110,13 @@ export function defineConfig(config: CfHeadersConfig): CfHeadersConfig {
 
 /** Remove Cloudflare's detach marker (`! Header`) and empty-header edge
  * cases before validating; also used internally by `writeHeadersFile`. */
-export function buildHeadersFile(rules: HeaderRule[]): {
+export function buildHeadersFile(rules: (HeaderRule | HeaderRule[])[]): {
 	content: string;
 	issues: ValidationIssue[];
 } {
-	const issues = validateConfig(rules);
-	const content = generateHeadersFile(rules);
+	const flatRules = rules.flat();
+	const issues = validateConfig(flatRules);
+	const content = generateHeadersFile(flatRules);
 	return { content, issues };
 }
 

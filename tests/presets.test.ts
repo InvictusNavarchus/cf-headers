@@ -144,23 +144,23 @@ describe('presets', () => {
 
 	it('noIndexPreviewDomainPreset sets X-Robots-Tag: noindex', () => {
 		const p = noIndexPreviewDomainPreset();
-		expect(p.path).toBe('https://:project.pages.dev/*');
-		expect(p.headers['X-Robots-Tag']).toBe('noindex');
+		expect(p).toHaveLength(2);
+		expect(p[0]?.path).toBe('https://:project.pages.dev/*');
+		expect(p[0]?.headers['X-Robots-Tag']).toBe('noindex');
+		expect(p[1]?.path).toBe('https://:version.:project.pages.dev/*');
+		expect(p[1]?.headers['X-Robots-Tag']).toBe('noindex');
 	});
 
-	it('noIndexPreviewDomainPreset supports custom pattern and normalizes it correctly', () => {
-		const p1 = noIndexPreviewDomainPreset({ pattern: 'staging.example.com' });
-		expect(p1.path).toBe('https://staging.example.com/*');
+	it('noIndexPreviewDomainPreset supports custom host suffix/pattern and normalizes it correctly', () => {
+		const p1 = noIndexPreviewDomainPreset({ hostPattern: 'workers.dev' });
+		expect(p1[0]?.path).toBe('https://:project.workers.dev/*');
+		expect(p1[1]?.path).toBe('https://:version.:project.workers.dev/*');
 
 		const p2 = noIndexPreviewDomainPreset({
-			pattern: 'http://staging.example.com/',
+			hostPattern: 'http://workers.dev/',
 		});
-		expect(p2.path).toBe('https://staging.example.com/*');
-
-		const p3 = noIndexPreviewDomainPreset({
-			pattern: 'https://staging.example.com/*',
-		});
-		expect(p3.path).toBe('https://staging.example.com/*');
+		expect(p2[0]?.path).toBe('https://:project.workers.dev/*');
+		expect(p2[1]?.path).toBe('https://:version.:project.workers.dev/*');
 	});
 
 	it('immutableAssetsPreset uses the immutable cache-control value', () => {

@@ -81,35 +81,34 @@ export function corsPreset(path: string): HeaderRule {
 /** Options to customize the no-index preview domain preset. */
 export interface NoIndexPresetOptions {
 	/**
-	 * The host/domain pattern to exclude from indexing (e.g., `':project.pages.dev'`, `*.workers.dev`).
-	 * Defaults to `':project.pages.dev'`.
+	 * The host pattern/suffix to target (e.g., `pages.dev` or `workers.dev`).
+	 * Defaults to `'pages.dev'`.
 	 */
-	pattern?: string;
-}
-
-function normalizeHostPattern(pattern: string): string {
-	const bareHost = pattern.replace(/^https?:\/\//, '');
-	const host = `https://${bareHost}`;
-	return host.endsWith('/*')
-		? host
-		: host.endsWith('/')
-			? `${host}*`
-			: `${host}/*`;
+	hostPattern?: string;
 }
 
 /** Keep a `*.pages.dev` / `*.workers.dev` preview subdomain out of search
  * results, so only your custom domain gets indexed. */
 export function noIndexPreviewDomainPreset(
 	options: NoIndexPresetOptions = {},
-): HeaderRule {
-	const pattern = options.pattern ?? ':project.pages.dev';
-	const path = normalizeHostPattern(pattern);
-	return {
-		path,
-		comment:
-			'Prevent the preview subdomain from being indexed by search engines.',
-		headers: { 'X-Robots-Tag': 'noindex' },
-	};
+): HeaderRule[] {
+	const suffix = (options.hostPattern ?? 'pages.dev')
+		.replace(/^https?:\/\//, '')
+		.replace(/\/+$/, '');
+
+	return [
+		{
+			path: `https://:project.${suffix}/*`,
+			comment:
+				'Block indexing of the root fallback domain. (Preview deployments are auto-excluded by Cloudflare by default)',
+			headers: { 'X-Robots-Tag': 'noindex' },
+		},
+		{
+			path: `https://:version.:project.${suffix}/*`,
+			comment: 'Block indexing of hash/branch preview deployment subdomains.',
+			headers: { 'X-Robots-Tag': 'noindex' },
+		},
+	];
 }
 
 /** Long-lived, immutable caching for content-hashed build output
