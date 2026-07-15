@@ -1,7 +1,7 @@
 # cf-headers
 
-![License](https://img.shields.io/github/license/InvictusNavarchus/cf-headers)
 ![npm](https://img.shields.io/npm/v/@navarchus/cf-headers)
+![License](https://img.shields.io/github/license/InvictusNavarchus/cf-headers)
 
 Type-safe `_headers` file generator for **Cloudflare Pages** and **Workers static assets**.
 
