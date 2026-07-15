@@ -13,6 +13,10 @@
 		"vite-plugin",
 		"typescript"
 	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/InvictusNavarchus/cf-headers"
+	},
 	"license": "MIT",
 	"type": "module",
 	"sideEffects": false,
