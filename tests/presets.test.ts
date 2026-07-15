@@ -143,8 +143,24 @@ describe('presets', () => {
 	});
 
 	it('noIndexPreviewDomainPreset sets X-Robots-Tag: noindex', () => {
-		const p = noIndexPreviewDomainPreset('https://:project.pages.dev/*');
+		const p = noIndexPreviewDomainPreset();
+		expect(p.path).toBe('https://:project.pages.dev/*');
 		expect(p.headers['X-Robots-Tag']).toBe('noindex');
+	});
+
+	it('noIndexPreviewDomainPreset supports custom pattern and normalizes it correctly', () => {
+		const p1 = noIndexPreviewDomainPreset({ pattern: 'staging.example.com' });
+		expect(p1.path).toBe('https://staging.example.com/*');
+
+		const p2 = noIndexPreviewDomainPreset({
+			pattern: 'http://staging.example.com/',
+		});
+		expect(p2.path).toBe('https://staging.example.com/*');
+
+		const p3 = noIndexPreviewDomainPreset({
+			pattern: 'https://staging.example.com/*',
+		});
+		expect(p3.path).toBe('https://staging.example.com/*');
 	});
 
 	it('immutableAssetsPreset uses the immutable cache-control value', () => {

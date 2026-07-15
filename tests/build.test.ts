@@ -142,6 +142,28 @@ describe('validateConfig', () => {
 		).toBe(true);
 	});
 
+	it('flags absolute URL patterns that do not contain a dot or end with /*', () => {
+		const rules1: HeaderRule[] = [
+			{ path: 'https://nodot/*', headers: { 'X-Test': '1' } },
+		];
+		const issues1 = validateConfig(rules1);
+		expect(
+			issues1.some(
+				(i) => i.level === 'error' && i.message.includes('contain a dot'),
+			),
+		).toBe(true);
+
+		const rules2: HeaderRule[] = [
+			{ path: 'https://example.com/assets', headers: { 'X-Test': '1' } },
+		];
+		const issues2 = validateConfig(rules2);
+		expect(
+			issues2.some(
+				(i) => i.level === 'error' && i.message.includes('end with "/*"'),
+			),
+		).toBe(true);
+	});
+
 	it('flags more than one splat in a path', () => {
 		const rules: HeaderRule[] = [
 			{ path: '/a/*/b/*', headers: { 'X-Test': '1' } },

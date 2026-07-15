@@ -15,7 +15,7 @@ export default defineConfig({
 				securityHeadersPreset('/*'),
 				immutableAssetsPreset('/assets/*'),
 				corsPreset('/fonts/*'),
-				noIndexPreviewDomainPreset('https://:project.pages.dev/*'),
+				noIndexPreviewDomainPreset(),
 				dynamicContentPreset('/api/*'),
 			],
 		}),

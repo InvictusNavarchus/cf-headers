@@ -78,7 +78,7 @@ export default defineConfig({
 				dynamicContentPreset('/api/*'),
 
 				// 5. Prevent indexing of preview/staging deployment domains (e.g. project.pages.dev)
-				noIndexPreviewDomainPreset('https://:project.pages.dev/*'),
+				noIndexPreviewDomainPreset(),
 
 				// 6. Custom rule showing how to add arbitrary headers for specific paths
 				{

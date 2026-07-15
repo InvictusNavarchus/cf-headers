@@ -81,6 +81,7 @@ export {
 } from './presets.js';
 export type {
 	HstsOptions,
+	NoIndexPresetOptions,
 	SecurityHeadersPresetOptions,
 } from './presets.js';
 

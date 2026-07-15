@@ -152,7 +152,7 @@ Ready-made rules for the scenarios that come up on nearly every project:
 | `dynamicContentPreset(path?)` | `no-store, no-cache, must-revalidate` headers for HTML entry points or API routes |
 | `immutableAssetsPreset(path?)` | Year-long, `immutable` caching for content-hashed build output |
 | `corsPreset(path?)` | `Access-Control-Allow-Origin: *` |
-| `noIndexPreviewDomainPreset(domainPattern?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain |
+| `noIndexPreviewDomainPreset(options?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain |
 
 
 ## Catalog metadata

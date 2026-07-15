@@ -44,6 +44,17 @@ function validatePath(
 		});
 	}
 
+	if (path.startsWith('https://')) {
+		const hostAndPath = path.slice(8);
+		if (!hostAndPath.includes('.') || !path.endsWith('/*')) {
+			issues.push({
+				level: 'error',
+				message: `Absolute URL pattern must contain a dot and end with "/*" to be matched correctly by Cloudflare: "${path}".`,
+				ruleIndex,
+			});
+		}
+	}
+
 	if (path.split('*').length - 1 > 1) {
 		issues.push({
 			level: 'error',

@@ -78,13 +78,34 @@ export function corsPreset(path: string): HeaderRule {
 	};
 }
 
+/** Options to customize the no-index preview domain preset. */
+export interface NoIndexPresetOptions {
+	/**
+	 * The host/domain pattern to exclude from indexing (e.g., `':project.pages.dev'`, `*.workers.dev`).
+	 * Defaults to `':project.pages.dev'`.
+	 */
+	pattern?: string;
+}
+
+function normalizeHostPattern(pattern: string): string {
+	const bareHost = pattern.replace(/^https?:\/\//, '');
+	const host = `https://${bareHost}`;
+	return host.endsWith('/*')
+		? host
+		: host.endsWith('/')
+			? `${host}*`
+			: `${host}/*`;
+}
+
 /** Keep a `*.pages.dev` / `*.workers.dev` preview subdomain out of search
  * results, so only your custom domain gets indexed. */
 export function noIndexPreviewDomainPreset(
-	domainPattern: `https://${string}` = 'https://:project.pages.dev/*',
+	options: NoIndexPresetOptions = {},
 ): HeaderRule {
+	const pattern = options.pattern ?? ':project.pages.dev';
+	const path = normalizeHostPattern(pattern);
 	return {
-		path: domainPattern,
+		path,
 		comment:
 			'Prevent the preview subdomain from being indexed by search engines.',
 		headers: { 'X-Robots-Tag': 'noindex' },
