@@ -63,6 +63,20 @@ describe('generateHeadersFile', () => {
 		);
 	});
 
+	it('renders an override directive with a detach followed by a set', () => {
+		const rules: HeaderRule[] = [
+			{
+				path: '/assets/*',
+				headers: {
+					'Cache-Control': { override: 'public, max-age=31536000, immutable' },
+				},
+			},
+		];
+		expect(generateHeadersFile(rules)).toBe(
+			'/assets/*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n',
+		);
+	});
+
 	it('supports placeholders in both the path and header value', () => {
 		const rules: HeaderRule[] = [
 			{
@@ -300,11 +314,12 @@ describe('validateConfig', () => {
 			{ path: '   ', headers: { 'X-Test': '2' } },
 		];
 		const issues = validateConfig(rules);
-		expect(issues).toHaveLength(2);
-		expect(issues[0]?.message).toBe('Rule is missing a path.');
-		expect(issues[0]?.ruleIndex).toBe(0);
-		expect(issues[1]?.message).toBe('Rule is missing a path.');
-		expect(issues[1]?.ruleIndex).toBe(1);
+		const errors = issues.filter((i) => i.level === 'error');
+		expect(errors).toHaveLength(2);
+		expect(errors[0]?.message).toBe('Rule is missing a path.');
+		expect(errors[0]?.ruleIndex).toBe(0);
+		expect(errors[1]?.message).toBe('Rule is missing a path.');
+		expect(errors[1]?.ruleIndex).toBe(1);
 	});
 
 	it('flags non-finite numbers as errors', () => {
@@ -348,13 +363,14 @@ describe('validateConfig', () => {
 			},
 		];
 		const issues = validateConfig(rules);
-		expect(issues).toHaveLength(5);
-		expect(issues.every((i) => i.level === 'error')).toBe(true);
-		expect(issues[0]?.message).toContain('cannot contain single quotes');
-		expect(issues[1]?.message).toContain('does not support the "none" keyword');
-		expect(issues[2]?.message).toContain('does not support the "none" keyword');
-		expect(issues[3]?.message).toContain('does not support the "src" keyword');
-		expect(issues[4]?.message).toContain(
+		const errors = issues.filter((i) => i.level === 'error');
+		expect(errors).toHaveLength(5);
+		expect(errors.every((i) => i.level === 'error')).toBe(true);
+		expect(errors[0]?.message).toContain('cannot contain single quotes');
+		expect(errors[1]?.message).toContain('does not support the "none" keyword');
+		expect(errors[2]?.message).toContain('does not support the "none" keyword');
+		expect(errors[3]?.message).toContain('does not support the "src" keyword');
+		expect(errors[4]?.message).toContain(
 			'does not support wildcard "*" inside a parenthesized list',
 		);
 	});
@@ -394,13 +410,60 @@ describe('validateConfig', () => {
 			},
 		];
 		const issues = validateConfig(rules);
-		expect(issues).toHaveLength(2);
-		expect(issues.every((i) => i.level === 'error')).toBe(true);
-		expect(issues[0]?.message).toContain(
+		const errors = issues.filter((i) => i.level === 'error');
+		expect(errors).toHaveLength(2);
+		expect(errors.every((i) => i.level === 'error')).toBe(true);
+		expect(errors[0]?.message).toContain(
 			'cannot contain both "public" and "private"',
 		);
-		expect(issues[1]?.message).toContain(
+		expect(errors[1]?.message).toContain(
 			'makes "max-age" and "immutable" meaningless',
+		);
+	});
+
+	it('warns when paths overlap and set the same plain header', () => {
+		const rules: HeaderRule[] = [
+			{ path: '/*', headers: { 'Cache-Control': 'no-store' } },
+			{
+				path: '/static/*',
+				headers: { 'Cache-Control': 'public, max-age=3600' },
+			},
+		];
+		const issues = validateConfig(rules);
+		const warnings = issues.filter((i) => i.level === 'warning');
+		expect(warnings).toHaveLength(1);
+		expect(warnings[0]?.message).toContain('Cache-Control');
+		expect(warnings[0]?.message).toContain('comma-joined');
+		expect(warnings[0]?.ruleIndex).toBe(1);
+	});
+
+	it('does not warn when the overlapping path uses override', () => {
+		const rules: HeaderRule[] = [
+			{ path: '/*', headers: { 'Cache-Control': 'no-store' } },
+			{
+				path: '/static/*',
+				headers: { 'Cache-Control': { override: 'public, max-age=3600' } },
+			},
+		];
+		const issues = validateConfig(rules);
+		const warnings = issues.filter((i) => i.level === 'warning');
+		expect(warnings).toHaveLength(0);
+	});
+
+	it('validates overridden values for syntax errors', () => {
+		const rules: HeaderRule[] = [
+			{
+				path: '/*',
+				headers: {
+					'Cache-Control': { override: 'public, private, max-age=3600' },
+				},
+			},
+		];
+		const issues = validateConfig(rules);
+		const errors = issues.filter((i) => i.level === 'error');
+		expect(errors).toHaveLength(1);
+		expect(errors[0]?.message).toContain(
+			'cannot contain both "public" and "private"',
 		);
 	});
 });

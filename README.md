@@ -103,6 +103,18 @@ rule("/*.jpg", { "Content-Security-Policy": { detach: true } });
 // renders as:  ! Content-Security-Policy
 ```
 
+**Override** a header to prevent Cloudflare's default accumulation behavior. Cloudflare does not use path specificity to resolve conflicts; instead, it comma-joins multiple values if a request matches multiple rules. To make a narrower rule truly override a broader one, use `override()`:
+
+```ts
+import { rule, override } from "cf-headers";
+
+rule("/assets/*", { "Cache-Control": override("public, max-age=31536000, immutable") });
+// renders as:
+// /assets/*
+//   ! Cache-Control
+//   Cache-Control: public, max-age=31536000, immutable
+```
+
 ## Type safety
 
 Header **names** autocomplete from the full catalog but still accept any
@@ -173,6 +185,11 @@ Every build validates against Cloudflare's documented constraints and fails
 - any rendered line over 2000 characters
 - absolute URLs that aren't `https://` or that specify a port
 - more than one `*` splat in a path
+
+It also issues **warnings** on:
+- deprecated or non-standard headers
+- unsafe directives in `Content-Security-Policy`
+- potential path collisions where the same header is set as a plain value (not overridden/detached) in multiple overlapping path patterns (helping you avoid unintended comma-joined values)
 
 Set `strict: false` in your configuration to downgrade these to warnings instead of build failures.
 

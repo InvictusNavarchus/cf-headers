@@ -14,6 +14,10 @@ function isDetach(value: unknown): value is { detach: true } {
 	);
 }
 
+function isOverride(value: unknown): value is { override: string | number } {
+	return typeof value === 'object' && value !== null && 'override' in value;
+}
+
 function validatePath(
 	path: string | undefined,
 	ruleIndex: number,
@@ -71,25 +75,30 @@ function validateGenericHeader(
 	ruleIndex: number,
 	issues: ValidationIssue[],
 ): void {
-	if (typeof value === 'number' && !Number.isFinite(value)) {
+	const checkValue = isOverride(value) ? value.override : value;
+	if (typeof checkValue === 'number' && !Number.isFinite(checkValue)) {
 		issues.push({
 			level: 'error',
-			message: `Header "${name}" has a non-finite number value: ${value}.`,
+			message: `Header "${name}" has a non-finite number value: ${checkValue}.`,
 			ruleIndex,
 		});
 	}
 
-	const line = serializeHeaderLine(name, value as HeaderDirective);
-	if (line.length > MAX_LINE_LENGTH) {
-		issues.push({
-			level: 'error',
-			message: `Line for "${name}" is ${line.length} characters, over the ${MAX_LINE_LENGTH}-character limit.`,
-			ruleIndex,
-		});
+	const lines = serializeHeaderLine(name, value as HeaderDirective).split('\n');
+	for (const line of lines) {
+		if (line.length > MAX_LINE_LENGTH) {
+			issues.push({
+				level: 'error',
+				message: `Line for "${name}" is ${line.length} characters, over the ${MAX_LINE_LENGTH}-character limit.`,
+				ruleIndex,
+			});
+		}
 	}
 
 	const lowerName = name.toLowerCase();
-	const stringValue = String(value);
+	const stringValue = isOverride(value)
+		? String(value.override)
+		: String(value);
 
 	if (
 		lowerName === 'access-control-allow-origin' &&
@@ -235,6 +244,65 @@ function validatePermissionsPolicy(
 	}
 }
 
+function pathPrefix(path: string): string {
+	return path.split(/[*:]/)[0] ?? '';
+}
+
+/**
+ * Heuristic to check if two Cloudflare path patterns can overlap.
+ * This is deliberately conservative and may flag non-overlapping paths,
+ * but prevents silent header collisions.
+ */
+function pathsCanOverlap(a: string, b: string): boolean {
+	if (a === b) return true;
+	const pa = pathPrefix(a),
+		pb = pathPrefix(b);
+	return pa.startsWith(pb) || pb.startsWith(pa);
+}
+
+function detectHeaderCollisions(
+	rules: HeaderRule[],
+	issues: ValidationIssue[],
+): void {
+	const setters = new Map<
+		string,
+		{ ruleIndex: number; path: string; name: string }[]
+	>();
+
+	rules.forEach((rule, ruleIndex) => {
+		for (const [name, value] of Object.entries(rule.headers)) {
+			if (value === undefined || isDetach(value) || isOverride(value)) {
+				continue;
+			}
+			const key = name.toLowerCase();
+			let list = setters.get(key);
+			if (!list) {
+				list = [];
+				setters.set(key, list);
+			}
+			list.push({ ruleIndex, path: rule.path, name });
+		}
+	});
+
+	for (const [_, entries] of setters) {
+		for (let i = 0; i < entries.length; i++) {
+			const entryI = entries[i];
+			if (!entryI) continue;
+			for (let j = i + 1; j < entries.length; j++) {
+				const entryJ = entries[j];
+				if (!entryJ) continue;
+				if (pathsCanOverlap(entryI.path, entryJ.path)) {
+					issues.push({
+						level: 'warning',
+						message: `"${entryJ.name}" is set as a plain value in rule ${entryI.ruleIndex} ("${entryI.path}") and rule ${entryJ.ruleIndex} ("${entryJ.path}"). Cloudflare has no path-specificity precedence — if both rules match the same request, the values will be comma-joined. If that's not intended, use override() in the more specific rule.`,
+						ruleIndex: entryJ.ruleIndex,
+					});
+				}
+			}
+		}
+	}
+}
+
 /**
  * Validate a rule set against Cloudflare's documented constraints:
  *  - at most 100 rule blocks
@@ -264,7 +332,9 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
 
 			if (!isDetach(value)) {
 				const lowerName = name.toLowerCase();
-				const stringValue = String(value);
+				const stringValue = isOverride(value)
+					? String(value.override)
+					: String(value);
 
 				if (
 					lowerName === 'cache-control' ||
@@ -284,6 +354,8 @@ export function validateConfig(rules: HeaderRule[]): ValidationIssue[] {
 			}
 		}
 	});
+
+	detectHeaderCollisions(rules, issues);
 
 	return issues;
 }

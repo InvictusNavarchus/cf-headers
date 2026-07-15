@@ -1,6 +1,11 @@
 import { generateHeadersFile } from './build.js';
 import { assertNoErrors, validateConfig } from './validate.js';
-import type { CfHeadersConfig, HeaderRule, ValidationIssue } from './types.js';
+import type {
+	CfHeadersConfig,
+	HeaderRule,
+	OverrideHeader,
+	ValidationIssue,
+} from './types.js';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 
@@ -8,6 +13,7 @@ import * as path from 'node:path';
 export type {
 	CfHeadersConfig,
 	DetachHeader,
+	OverrideHeader,
 	HeaderBlock,
 	HeaderBlockInput,
 	HeaderDirective,
@@ -98,6 +104,19 @@ export function rule(
 	comment?: string,
 ): HeaderRule {
 	return comment !== undefined ? { path, headers, comment } : { path, headers };
+}
+
+/**
+ * Helper to override a header that Cloudflare or an earlier, less specific rule
+ * would otherwise apply. Cloudflare does not use path specificity to resolve conflicts;
+ * instead it comma-joins values. This helper outputs a detach line followed by a set line
+ * to ensure the new value wins.
+ *
+ * @example
+ * rule("/assets/*", { "Cache-Control": override(immutableAssetCacheControl()) })
+ */
+export function override(value: string | number): OverrideHeader {
+	return { override: value };
 }
 
 /**

@@ -13,11 +13,19 @@ export interface DetachHeader {
 	readonly detach: true;
 }
 
+/** Rule for overriding a header that Cloudflare or an earlier, less specific
+ * rule would otherwise apply. Cloudflare does not use path specificity to resolve
+ * conflicts; instead it comma-joins values. This directive renders a detach
+ * line followed by a set line to ensure the new value wins. */
+export interface OverrideHeader {
+	readonly override: string | number;
+}
+
 /**
  * A single line of Cache-Control-like syntax where you may want either a
- * literal value or an explicit "remove this header" marker.
+ * literal value, an explicit "remove this header" marker, or an override marker.
  */
-export type HeaderDirective = string | number | DetachHeader;
+export type HeaderDirective = string | number | DetachHeader | OverrideHeader;
 
 /**
  * The rule's header block. Known header names get autocomplete + (for a
@@ -38,12 +46,20 @@ export type HeaderBlock = {
  * other string key is still accepted for custom/experimental headers.
  */
 export type HeaderBlockInput = {
-	[K in KnownHeaderName]?: HeaderValueFor<K> | DetachHeader;
+	[K in KnownHeaderName]?: HeaderValueFor<K> | DetachHeader | OverrideHeader;
 } & {
 	[header: string]: HeaderDirective;
 };
 
-/** A single `_headers` rule: a URL pattern plus the header lines under it. */
+/** A single `_headers` rule: a URL pattern plus the header lines under it.
+ *
+ * ⚠️ Precedence note: Cloudflare does NOT use path specificity to resolve
+ * conflicts. If multiple rules match the same request and set the same
+ * header name, Cloudflare *comma-joins* the values rather than letting one
+ * win. To make a narrower rule truly override a broader one, use
+ * `override()` (or a manual `{ detach: true }` + separate rule) instead of
+ * just setting the header again.
+ */
 export interface HeaderRule {
 	/**
 	 * Path or absolute URL this rule applies to. Supports Cloudflare's

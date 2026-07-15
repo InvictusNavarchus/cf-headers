@@ -1,4 +1,4 @@
-import type { HeaderDirective, HeaderRule } from './types.js';
+import type { HeaderDirective, HeaderRule, OverrideHeader } from './types.js';
 
 /** Cloudflare's documented per-line character limit for `_headers`. */
 export const MAX_LINE_LENGTH = 2000;
@@ -14,12 +14,19 @@ function isDetach(value: HeaderDirective): value is { detach: true } {
 	);
 }
 
+export function isOverride(value: HeaderDirective): value is OverrideHeader {
+	return typeof value === 'object' && value !== null && 'override' in value;
+}
+
 export function serializeHeaderLine(
 	name: string,
 	value: HeaderDirective,
 ): string {
 	if (isDetach(value)) {
 		return `  ! ${name}`;
+	}
+	if (isOverride(value)) {
+		return `  ! ${name}\n  ${name}: ${value.override}`;
 	}
 	return `  ${name}: ${value}`;
 }
