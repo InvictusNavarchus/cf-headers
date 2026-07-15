@@ -2,9 +2,6 @@
 	"name": "@navarchus/cf-headers",
 	"version": "0.3.0",
 	"description": "Type-safe _headers file generator for Cloudflare Pages & Workers static assets, with a full catalog of HTTP response headers (status, deprecation, and reference info) and autocomplete for header names and values.",
-	"author": {
-		"name": "navarchus"
-	},
 	"keywords": [
 		"cloudflare",
 		"cloudflare-pages",
@@ -21,9 +18,11 @@
 		"url": "https://github.com/InvictusNavarchus/cf-headers"
 	},
 	"license": "MIT",
-	"type": "module",
+	"author": {
+		"name": "navarchus"
+	},
 	"sideEffects": false,
-	"types": "./dist/index.d.mts",
+	"type": "module",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.mts",
@@ -35,29 +34,27 @@
 		},
 		"./package.json": "./package.json"
 	},
+	"types": "./dist/index.d.mts",
 	"files": [
 		"dist",
 		"README.md",
 		"LICENSE"
 	],
-	"engines": {
-		"node": ">=20.0.0"
-	},
 	"scripts": {
 		"build": "tsdown",
 		"dev": "tsdown --watch",
-		"test": "vitest run",
-		"test:coverage": "vitest --coverage",
-		"test:watch": "vitest",
-		"typecheck": "tsc --noEmit",
-		"lint": "biome lint",
-		"format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
-		"release": "release-it",
 		"example:basic": "bun run build && bunx vite build examples/basic && cat examples/basic/dist/_headers",
 		"example:production": "bun run build && bunx vite build examples/production && cat examples/production/dist/_headers",
 		"example:vite": "bun run example:basic && bun run example:production",
+		"format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
+		"knip": "knip",
+		"lint": "biome lint",
 		"prepublishOnly": "bun run typecheck && bun run test && bun run build",
-		"knip": "knip"
+		"release": "release-it",
+		"test": "vitest run",
+		"test:coverage": "vitest --coverage",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.3",
@@ -80,6 +77,9 @@
 		"vite": {
 			"optional": true
 		}
+	},
+	"engines": {
+		"node": ">=20.0.0"
 	},
 	"publishConfig": {
 		"access": "public"
