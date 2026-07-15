@@ -142,7 +142,7 @@ describe('presets', () => {
 		expect(p.headers['Access-Control-Allow-Origin']).toBe('*');
 	});
 
-	it('noIndexPreviewDomainPreset sets X-Robots-Tag: noindex', () => {
+	it('noIndexPreviewDomainPreset sets X-Robots-Tag: noindex for pages', () => {
 		const p = noIndexPreviewDomainPreset();
 		expect(p).toHaveLength(2);
 		expect(p[0]?.path).toBe('https://:project.pages.dev/*');
@@ -151,16 +151,11 @@ describe('presets', () => {
 		expect(p[1]?.headers['X-Robots-Tag']).toBe('noindex');
 	});
 
-	it('noIndexPreviewDomainPreset supports custom host suffix/pattern and normalizes it correctly', () => {
-		const p1 = noIndexPreviewDomainPreset({ hostPattern: 'workers.dev' });
-		expect(p1[0]?.path).toBe('https://:project.workers.dev/*');
-		expect(p1[1]?.path).toBe('https://:version.:project.workers.dev/*');
-
-		const p2 = noIndexPreviewDomainPreset({
-			hostPattern: 'http://workers.dev/',
-		});
-		expect(p2[0]?.path).toBe('https://:project.workers.dev/*');
-		expect(p2[1]?.path).toBe('https://:version.:project.workers.dev/*');
+	it('noIndexPreviewDomainPreset sets X-Robots-Tag: noindex for workers', () => {
+		const p = noIndexPreviewDomainPreset({ platform: 'workers' });
+		expect(p).toHaveLength(1);
+		expect(p[0]?.path).toBe('https://:version.:subdomain.workers.dev/*');
+		expect(p[0]?.headers['X-Robots-Tag']).toBe('noindex');
 	});
 
 	it('immutableAssetsPreset uses the immutable cache-control value', () => {

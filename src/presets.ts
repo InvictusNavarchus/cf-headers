@@ -81,30 +81,47 @@ export function corsPreset(path: string): HeaderRule {
 /** Options to customize the no-index preview domain preset. */
 export interface NoIndexPresetOptions {
 	/**
-	 * The host pattern/suffix to target (e.g., `pages.dev` or `workers.dev`).
-	 * Defaults to `'pages.dev'`.
+	 * The Cloudflare platform to target.
+	 * - 'pages' (default): Blocks *.pages.dev and *.*.pages.dev
+	 * - 'workers': Blocks *.*.workers.dev
 	 */
-	hostPattern?: string;
+	platform?: 'pages' | 'workers';
 }
 
-/** Keep a `*.pages.dev` / `*.workers.dev` preview subdomain out of search
- * results, so only your custom domain gets indexed. */
+/**
+ * Keep Cloudflare's default platform domains (*.pages.dev / *.workers.dev)
+ * out of search results, so only your custom domain gets indexed.
+ *
+ * Note: If you need to noindex a custom domain (e.g., staging.mysite.com),
+ * do not use this preset. Instead, define a raw HeaderRule with an absolute URL:
+ * { path: 'https://staging.mysite.com/*', headers: { 'X-Robots-Tag': 'noindex' } }
+ */
 export function noIndexPreviewDomainPreset(
 	options: NoIndexPresetOptions = {},
 ): HeaderRule[] {
-	const suffix = (options.hostPattern ?? 'pages.dev')
-		.replace(/^https?:\/\//, '')
-		.replace(/\/+$/, '');
+	if (options.platform === 'workers') {
+		return [
+			{
+				// Matches <worker-name>.<account-subdomain>.workers.dev
+				path: 'https://:version.:subdomain.workers.dev/*',
+				comment: 'Block indexing of workers.dev preview deployment subdomains.',
+				headers: { 'X-Robots-Tag': 'noindex' },
+			},
+		];
+	}
 
+	// Default to 'pages'
 	return [
 		{
-			path: `https://:project.${suffix}/*`,
+			// Matches <project>.pages.dev
+			path: 'https://:project.pages.dev/*',
 			comment:
-				'Block indexing of the root fallback domain. (Preview deployments are auto-excluded by Cloudflare by default)',
+				'Block indexing of the root fallback domain. (Preview deployments are auto-excluded by Cloudflare by default).',
 			headers: { 'X-Robots-Tag': 'noindex' },
 		},
 		{
-			path: `https://:version.:project.${suffix}/*`,
+			// Matches <branch>.<project>.pages.dev
+			path: 'https://:version.:project.pages.dev/*',
 			comment: 'Block indexing of hash/branch preview deployment subdomains.',
 			headers: { 'X-Robots-Tag': 'noindex' },
 		},
