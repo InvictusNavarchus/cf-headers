@@ -37,8 +37,8 @@ If your project uses Vite, add the plugin to your `vite.config.ts`. It hooks int
 ```ts
 // vite.config.ts
 import { defineConfig } from "vite";
-import { cfHeaders } from "cf-headers/vite";
-import { securityHeadersPreset, immutableAssetsPreset } from "cf-headers";
+import { cfHeaders } from "@navarchus/cf-headers/vite";
+import { securityHeadersPreset, immutableAssetsPreset } from "@navarchus/cf-headers";
 
 export default defineConfig({
   plugins: [
@@ -57,7 +57,7 @@ export default defineConfig({
 Not using Vite? You can call the programmatic API from any Node build or post-build script (Webpack, Esbuild, Next.js, etc.):
 
 ```ts
-import { writeHeadersFile, securityHeadersPreset, immutableAssetsPreset } from "cf-headers";
+import { writeHeadersFile, securityHeadersPreset, immutableAssetsPreset } from "@navarchus/cf-headers";
 
 await writeHeadersFile({
   outDir: "dist", // path to your built static assets
@@ -75,7 +75,7 @@ A rule is a path (or absolute HTTPS URL) plus a block of headers, matching
 one-to-one:
 
 ```ts
-import { rule } from "cf-headers";
+import { rule } from "@navarchus/cf-headers";
 
 rule(
   "/secure/page",
@@ -106,7 +106,7 @@ rule("/*.jpg", { "Content-Security-Policy": { detach: true } });
 **Override** a header to prevent Cloudflare's default accumulation behavior. Cloudflare does not use path specificity to resolve conflicts; instead, it comma-joins multiple values if a request matches multiple rules. To make a narrower rule truly override a broader one, use `override()`:
 
 ```ts
-import { rule, override } from "cf-headers";
+import { rule, override } from "@navarchus/cf-headers";
 
 rule("/assets/*", { "Cache-Control": override("public, max-age=31536000, immutable") });
 // renders as:
@@ -138,7 +138,7 @@ A handful of headers with a fixed vocabulary get a real literal-union type
 to get subtly wrong as hand-rolled strings, so they get typed builders:
 
 ```ts
-import { cacheControl, csp, permissionsPolicy } from "cf-headers";
+import { cacheControl, csp, permissionsPolicy } from "@navarchus/cf-headers";
 
 cacheControl({ public: true, maxAge: 31536000, immutable: true });
 // "public, max-age=31536000, immutable"
@@ -172,7 +172,7 @@ Ready-made rules for the scenarios that come up on nearly every project:
 The same metadata that powers deprecation warnings is exported, so you can build tooling on top of it. E.g.,, a CI check that fails on deprecated headers in production rules, or a custom preset generator.
 
 ```ts
-import { getHeadersByStatus } from "cf-headers";
+import { getHeadersByStatus } from "@navarchus/cf-headers";
 getHeadersByStatus("deprecated"); // every deprecated header in the catalog
 ```
 

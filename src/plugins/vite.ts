@@ -18,7 +18,7 @@ export interface CfHeadersVitePluginOptions {
  * // vite.config.ts
  * import { defineConfig } from "vite";
  * import { cfHeaders } from "cf-headers/vite";
- * import { securityHeadersPreset, immutableAssetsPreset } from "cf-headers";
+ * import { securityHeadersPreset, immutableAssetsPreset } from "@navarchus/cf-headers";
  *
  * export default defineConfig({
  *   plugins: [
