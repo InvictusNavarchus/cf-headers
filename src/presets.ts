@@ -78,7 +78,13 @@ function formatHsts(options: boolean | HstsOptions): string | undefined {
 	return parts.join('; ');
 }
 
-/** Allow any origin to fetch matching assets (fonts, images, etc) under the specified `path`. */
+/**
+ * Allow any origin to fetch matching assets (fonts, images, etc.) under the specified `path`.
+ *
+ * Note: This sets simple wildcard origin sharing and CORP cross-origin headers, which is
+ * sufficient for CDN static assets (like fonts). For complex API CORS (such as credentials,
+ * custom methods, or headers), define a raw `rule()` instead, or handle it dynamically at runtime.
+ */
 export function corsPreset(path: string): HeaderRule {
 	return {
 		path,
