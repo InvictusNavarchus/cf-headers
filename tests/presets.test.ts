@@ -326,4 +326,18 @@ describe('presets', () => {
 		const pDisable = securityHeadersPreset('/*', { csp: false });
 		expect(pDisable.headers['Content-Security-Policy']).toBeUndefined();
 	});
+
+	it('securityHeadersPreset supports custom Referrer-Policy, X-Content-Type-Options, and disabling them or Permissions-Policy', () => {
+		const pRef = securityHeadersPreset('/*', { referrerPolicy: 'no-referrer' });
+		expect(pRef.headers['Referrer-Policy']).toBe('no-referrer');
+
+		const pNoRef = securityHeadersPreset('/*', { referrerPolicy: false });
+		expect(pNoRef.headers['Referrer-Policy']).toBeUndefined();
+
+		const pNoXcto = securityHeadersPreset('/*', { xContentTypeOptions: false });
+		expect(pNoXcto.headers['X-Content-Type-Options']).toBeUndefined();
+
+		const pNoPerm = securityHeadersPreset('/*', { permissions: false });
+		expect(pNoPerm.headers['Permissions-Policy']).toBeUndefined();
+	});
 });

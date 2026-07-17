@@ -11,6 +11,8 @@ import type {
 	CrossOriginEmbedderPolicyValue,
 	CrossOriginOpenerPolicyValue,
 	CrossOriginResourcePolicyValue,
+	ReferrerPolicyValue,
+	XContentTypeOptionsValue,
 	XFrameOptionsValue,
 } from './header-values.js';
 import type { HeaderRule } from './types.js';
@@ -40,8 +42,12 @@ export interface SecurityHeadersPresetOptions {
 		| false;
 	/** Configures HTTP Strict Transport Security (HSTS). Pass `false` to disable entirely. Defaults to `{ maxAge: 31536000 }` (without subdomains/preload). */
 	hsts?: boolean | HstsOptions;
-	/** Overrides for the Permissions-Policy. */
-	permissions?: PermissionsPolicyOptions;
+	/** Overrides for the Permissions-Policy. Pass `false` to disable entirely. */
+	permissions?: PermissionsPolicyOptions | false;
+	/** Configures Referrer-Policy. Pass `false` to disable. Defaults to `'strict-origin-when-cross-origin'`. */
+	referrerPolicy?: boolean | ReferrerPolicyValue;
+	/** Configures X-Content-Type-Options. Pass `false` to disable. Defaults to `'nosniff'`. */
+	xContentTypeOptions?: boolean | XContentTypeOptionsValue;
 	/** Configures Cross-Origin-Opener-Policy (COOP). Pass `false` to disable. Defaults to `'same-origin'`. */
 	coop?: boolean | 'same-origin' | 'same-origin-allow-popups' | 'unsafe-none';
 	/** Configures Cross-Origin-Embedder-Policy (COEP). Pass `false` to disable. Defaults to `false` (disabled) to avoid breaking third-party assets. */
@@ -211,7 +217,22 @@ function resolveHsts(opt?: boolean | HstsOptions): string | undefined {
 	return formatHsts(opt ?? { maxAge: 31536000 });
 }
 
-function resolvePermissionsPolicy(opt?: PermissionsPolicyOptions): string {
+function resolveReferrerPolicy(
+	opt?: boolean | ReferrerPolicyValue,
+): ReferrerPolicyValue | undefined {
+	return resolveSecurityOption(opt, 'strict-origin-when-cross-origin');
+}
+
+function resolveXContentTypeOptions(
+	opt?: boolean | XContentTypeOptionsValue,
+): XContentTypeOptionsValue | undefined {
+	return resolveSecurityOption(opt, 'nosniff');
+}
+
+function resolvePermissionsPolicy(
+	opt?: PermissionsPolicyOptions | false,
+): string | undefined {
+	if (opt === false) return undefined;
 	return lockedDownPermissionsPolicy(opt ?? {});
 }
 
@@ -267,10 +288,13 @@ export function securityHeadersPreset(
 	path = '/*',
 	options: SecurityHeadersPresetOptions = {},
 ): HeaderRule {
-	const headers: HeaderRule['headers'] = {
-		'X-Content-Type-Options': 'nosniff',
-		'Referrer-Policy': 'strict-origin-when-cross-origin',
-	};
+	const headers: HeaderRule['headers'] = {};
+
+	const xcto = resolveXContentTypeOptions(options.xContentTypeOptions);
+	if (xcto) headers['X-Content-Type-Options'] = xcto;
+
+	const rp = resolveReferrerPolicy(options.referrerPolicy);
+	if (rp) headers['Referrer-Policy'] = rp;
 
 	const cspVal = resolveCsp(options.csp);
 	if (cspVal) {
@@ -283,7 +307,10 @@ export function securityHeadersPreset(
 	const hsts = resolveHsts(options.hsts);
 	if (hsts) headers['Strict-Transport-Security'] = hsts;
 
-	headers['Permissions-Policy'] = resolvePermissionsPolicy(options.permissions);
+	const permissions = resolvePermissionsPolicy(options.permissions);
+	if (permissions) {
+		headers['Permissions-Policy'] = permissions;
+	}
 
 	const coop = resolveCoop(options.coop);
 	if (coop) headers['Cross-Origin-Opener-Policy'] = coop;
