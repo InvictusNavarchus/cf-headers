@@ -174,9 +174,7 @@ function resolveHsts(opt?: boolean | HstsOptions): string | undefined {
 }
 
 function resolvePermissionsPolicy(opt?: PermissionsPolicyOptions): string {
-	return opt
-		? lockedDownPermissionsPolicy(opt)
-		: 'camera=(), microphone=(), geolocation=()';
+	return lockedDownPermissionsPolicy(opt ?? {});
 }
 
 function resolveCoop(

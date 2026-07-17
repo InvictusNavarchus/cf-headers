@@ -171,9 +171,7 @@ describe('presets', () => {
 		expect(p.headers['X-Frame-Options']).toBe('DENY');
 		expect(typeof p.headers['Content-Security-Policy']).toBe('string');
 		expect(p.headers['Strict-Transport-Security']).toBe('max-age=31536000');
-		expect(p.headers['Permissions-Policy']).toBe(
-			'camera=(), microphone=(), geolocation=()',
-		);
+		expect(p.headers['Permissions-Policy']).toBe(lockedDownPermissionsPolicy());
 		expect(p.headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
 		expect(p.headers['Cross-Origin-Resource-Policy']).toBe('same-origin');
 		expect(p.headers['Cross-Origin-Embedder-Policy']).toBeUndefined();
