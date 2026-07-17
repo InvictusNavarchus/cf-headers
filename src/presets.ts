@@ -2,7 +2,7 @@ import {
 	immutableAssetCacheControl,
 	noStoreCacheControl,
 } from './helpers/cache-control.js';
-import { strictCsp, type CspOptions } from './helpers/csp.js';
+import { strictCsp, compatibleCsp, type CspOptions } from './helpers/csp.js';
 import {
 	lockedDownPermissionsPolicy,
 	type PermissionsPolicyOptions,
@@ -25,10 +25,19 @@ export interface HstsOptions {
 	preload?: boolean;
 }
 
+export type CspPresetName = 'compatible' | 'strict';
+
 /** Options to customize the default security headers preset. */
 export interface SecurityHeadersPresetOptions {
-	/** Overrides for the Content-Security-Policy directive. */
-	csp?: CspOptions;
+	/**
+	 * Configures Content-Security-Policy (CSP). Pass `false` to disable.
+	 * Defaults to `'compatible'` (allows same-origin JS/assets and inline styles).
+	 */
+	csp?:
+		| CspPresetName
+		| CspOptions
+		| { preset: CspPresetName; overrides?: CspOptions }
+		| false;
 	/** Configures HTTP Strict Transport Security (HSTS). Pass `false` to disable entirely. Defaults to `{ maxAge: 31536000 }` (without subdomains/preload). */
 	hsts?: boolean | HstsOptions;
 	/** Overrides for the Permissions-Policy. */
@@ -177,6 +186,32 @@ function resolvePermissionsPolicy(opt?: PermissionsPolicyOptions): string {
 	return lockedDownPermissionsPolicy(opt ?? {});
 }
 
+function resolveCsp(
+	opt?:
+		| CspPresetName
+		| CspOptions
+		| { preset: CspPresetName; overrides?: CspOptions }
+		| false,
+): string | undefined {
+	if (opt === false) return undefined;
+	if (opt === undefined || opt === 'compatible') {
+		return compatibleCsp({});
+	}
+	if (opt === 'strict') {
+		return strictCsp({});
+	}
+	if (typeof opt === 'object') {
+		if ('preset' in opt) {
+			const config = opt as { preset: CspPresetName; overrides?: CspOptions };
+			return config.preset === 'strict'
+				? strictCsp(config.overrides ?? {})
+				: compatibleCsp(config.overrides ?? {});
+		}
+		return compatibleCsp(opt);
+	}
+	return undefined;
+}
+
 function resolveCoop(
 	opt?: boolean | CrossOriginOpenerPolicyValue,
 ): CrossOriginOpenerPolicyValue | undefined {
@@ -206,8 +241,12 @@ export function securityHeadersPreset(
 	const headers: HeaderRule['headers'] = {
 		'X-Content-Type-Options': 'nosniff',
 		'Referrer-Policy': 'strict-origin-when-cross-origin',
-		'Content-Security-Policy': strictCsp(options.csp ?? {}),
 	};
+
+	const cspVal = resolveCsp(options.csp);
+	if (cspVal) {
+		headers['Content-Security-Policy'] = cspVal;
+	}
 
 	const xfo = resolveXFrameOptions(options.xFrameOptions);
 	if (xfo) headers['X-Frame-Options'] = xfo;

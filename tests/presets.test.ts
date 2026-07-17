@@ -5,7 +5,7 @@ import {
 	noCacheControl,
 	noStoreCacheControl,
 } from '../src/helpers/cache-control.js';
-import { csp, strictCsp } from '../src/helpers/csp.js';
+import { csp, strictCsp, compatibleCsp } from '../src/helpers/csp.js';
 import {
 	lockedDownPermissionsPolicy,
 	permissionsPolicy,
@@ -99,7 +99,13 @@ describe('csp', () => {
 
 	it('strictCsp() produces a locked-down baseline', () => {
 		expect(strictCsp()).toBe(
-			"default-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
+			"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; worker-src 'self'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests",
+		);
+	});
+
+	it('compatibleCsp() produces a reasonable, compatible baseline for SPAs', () => {
+		expect(compatibleCsp()).toBe(
+			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests",
 		);
 	});
 
@@ -272,5 +278,36 @@ describe('presets', () => {
 
 		const p3 = securityHeadersPreset('/*', { xFrameOptions: true });
 		expect(p3.headers['X-Frame-Options']).toBe('DENY');
+	});
+
+	it('securityHeadersPreset supports custom CSP presets, overrides, and disabling', () => {
+		const pDefault = securityHeadersPreset();
+		expect(pDefault.headers['Content-Security-Policy']).toBe(compatibleCsp());
+
+		const pComp = securityHeadersPreset('/*', { csp: 'compatible' });
+		expect(pComp.headers['Content-Security-Policy']).toBe(compatibleCsp());
+
+		const pStrict = securityHeadersPreset('/*', { csp: 'strict' });
+		expect(pStrict.headers['Content-Security-Policy']).toBe(strictCsp());
+
+		const pOverride = securityHeadersPreset('/*', {
+			csp: { connectSrc: ["'self'", 'https://api.example.com'] },
+		});
+		expect(pOverride.headers['Content-Security-Policy']).toBe(
+			compatibleCsp({ connectSrc: ["'self'", 'https://api.example.com'] }),
+		);
+
+		const pPresetOverride = securityHeadersPreset('/*', {
+			csp: {
+				preset: 'strict',
+				overrides: { scriptSrc: ["'self'", 'https://cdn.example.com'] },
+			},
+		});
+		expect(pPresetOverride.headers['Content-Security-Policy']).toBe(
+			strictCsp({ scriptSrc: ["'self'", 'https://cdn.example.com'] }),
+		);
+
+		const pDisable = securityHeadersPreset('/*', { csp: false });
+		expect(pDisable.headers['Content-Security-Policy']).toBeUndefined();
 	});
 });

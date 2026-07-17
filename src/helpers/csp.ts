@@ -85,14 +85,43 @@ export function csp(options: CspOptions): string {
 	return parts.join('; ');
 }
 
-/** A reasonable, restrictive starting point: same-origin only, no plugins,
- * no framing. Tighten/relax per-directive as needed for your app. */
+/** A reasonable, compatible starting point for modern SPAs: same-origin assets,
+ * inline styles allowed, data: and blob: URLs for images/fonts/workers. */
+export function compatibleCsp(overrides: CspOptions = {}): string {
+	return csp({
+		defaultSrc: ["'self'"],
+		scriptSrc: ["'self'"],
+		styleSrc: ["'self'", "'unsafe-inline'"],
+		imgSrc: ["'self'", 'data:', 'blob:'],
+		fontSrc: ["'self'", 'data:'],
+		connectSrc: ["'self'"],
+		workerSrc: ["'self'", 'blob:'],
+		objectSrc: ["'none'"],
+		frameAncestors: ["'none'"],
+		formAction: ["'self'"],
+		baseUri: ["'self'"],
+		upgradeInsecureRequests: true,
+		...overrides,
+	});
+}
+
+/** A locked-down starting point for fully self-contained static sites:
+ * same-origin only, no inline styles or external resources. */
 export function strictCsp(overrides: CspOptions = {}): string {
 	return csp({
 		defaultSrc: ["'self'"],
+		scriptSrc: ["'self'"],
+		styleSrc: ["'self'"],
+		imgSrc: ["'self'"],
+		fontSrc: ["'self'"],
+		connectSrc: ["'self'"],
+		workerSrc: ["'self'"],
 		objectSrc: ["'none'"],
+		frameSrc: ["'none'"],
 		frameAncestors: ["'none'"],
+		formAction: ["'self'"],
 		baseUri: ["'self'"],
+		upgradeInsecureRequests: true,
 		...overrides,
 	});
 }

@@ -66,7 +66,7 @@ export {
 	noStoreCacheControl,
 } from './helpers/cache-control.js';
 export type { CacheControlOptions } from './helpers/cache-control.js';
-export { csp, strictCsp } from './helpers/csp.js';
+export { csp, strictCsp, compatibleCsp } from './helpers/csp.js';
 export type { CspOptions } from './helpers/csp.js';
 export {
 	lockedDownPermissionsPolicy,
