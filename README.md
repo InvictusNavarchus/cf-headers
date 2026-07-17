@@ -138,13 +138,18 @@ A handful of headers with a fixed vocabulary get a real literal-union type
 to get subtly wrong as hand-rolled strings, so they get typed builders:
 
 ```ts
-import { cacheControl, csp, permissionsPolicy } from "@navarchus/cf-headers";
+import { cacheControl, csp, permissionsPolicy, compatibleCsp, strictCsp } from "@navarchus/cf-headers";
 
 cacheControl({ public: true, maxAge: 31536000, immutable: true });
 // "public, max-age=31536000, immutable"
 
+// Raw CSP builder:
 csp({ defaultSrc: ["'self'"], scriptSrc: ["'self'", "https://cdn.example.com"] });
 // "default-src 'self'; script-src 'self' https://cdn.example.com"
+
+// High-level CSP presets:
+compatibleCsp(); // Practical SPA-friendly CSP (style-src 'unsafe-inline', data/blob URLs)
+strictCsp();     // High-security lockdown for fully self-contained static sites
 
 permissionsPolicy({ camera: [], geolocation: ["self"] });
 // "camera=(), geolocation=(self)"
@@ -160,11 +165,34 @@ Ready-made rules for the scenarios that come up on nearly every project:
 
 | Preset | What it does |
 |---|---|
-| `securityHeadersPreset(path?, options?)` | `nosniff`, strict CSP, Permissions-Policy, Referrer-Policy, and secure COOP/CORP defaults |
-| `dynamicContentPreset(path?)` | `no-store, no-cache, must-revalidate` headers for HTML entry points or API routes |
-| `immutableAssetsPreset(path?)` | Year-long, `immutable` caching for content-hashed build output |
-| `corsPreset(path?)` | `Access-Control-Allow-Origin: *` |
-| `noIndexPreviewDomainPreset(options?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain |
+| `securityHeadersPreset(path?, options?)` | `nosniff`, CSP, HSTS, Permissions-Policy, Referrer-Policy, and secure COOP/CORP defaults. |
+| `dynamicContentPreset(path?)` | Overrides `Cache-Control` to `no-store, no-cache, must-revalidate` for dynamic routes. |
+| `immutableAssetsPreset(path?, options?)` | Overrides `Cache-Control` to `immutable` caching, and detaches HTML-specific headers (CSP, Permissions-Policy, X-Frame-Options) to avoid bloat. |
+| `corsPreset(path?)` | Overrides CORS origin to `*` and CORP to `cross-origin` to ensure static assets can be loaded cross-origin. |
+| `noIndexPreviewDomainPreset(options?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain. |
+
+### Security Headers Customization
+
+The `securityHeadersPreset` offers deep customization. Most values can be customized or disabled entirely by passing `false`:
+
+```ts
+securityHeadersPreset("/*", {
+  // Select a CSP preset ('compatible' | 'strict'), pass CspOptions (merges onto 'compatible'), or false to omit
+  csp: "compatible", // default
+  
+  // Custom HSTS config or false to disable
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  
+  // Disable specific headers entirely if handled elsewhere
+  permissions: false,
+  referrerPolicy: false,
+  xContentTypeOptions: false,
+  xFrameOptions: false,
+  coop: false,
+  coep: false,
+  corp: false,
+});
+```
 
 
 ## Catalog metadata

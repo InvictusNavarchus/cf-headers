@@ -21,8 +21,8 @@ export default defineConfig({
 						includeSubDomains: true,
 						preload: true,
 					},
+					// Customizes CSP by overriding specific directives on top of the default 'compatible' preset
 					csp: {
-						defaultSrc: ["'self'"],
 						scriptSrc: [
 							"'self'",
 							'https://www.googletagmanager.com',
@@ -51,9 +51,6 @@ export default defineConfig({
 							'https://js.stripe.com',
 							'https://www.youtube-nocookie.com',
 						],
-						objectSrc: ["'none'"],
-						baseUri: ["'self'"],
-						upgradeInsecureRequests: true,
 					},
 					permissions: {
 						camera: [],
