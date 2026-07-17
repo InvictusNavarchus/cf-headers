@@ -142,10 +142,13 @@ describe('permissionsPolicy', () => {
 });
 
 describe('presets', () => {
-	it('corsPreset sets Access-Control-Allow-Origin: * for the given path', () => {
+	it('corsPreset sets Access-Control-Allow-Origin: * and overrides CORP for the given path', () => {
 		const p = corsPreset('/assets/*');
 		expect(p.path).toBe('/assets/*');
-		expect(p.headers['Access-Control-Allow-Origin']).toBe('*');
+		expect(p.headers['Access-Control-Allow-Origin']).toEqual({ override: '*' });
+		expect(p.headers['Cross-Origin-Resource-Policy']).toEqual({
+			override: 'cross-origin',
+		});
 	});
 
 	it('noIndexPreviewDomainPreset sets X-Robots-Tag: noindex for pages', () => {
@@ -164,11 +167,24 @@ describe('presets', () => {
 		expect(p[0]?.headers['X-Robots-Tag']).toBe('noindex');
 	});
 
-	it('immutableAssetsPreset uses the immutable cache-control value', () => {
+	it('immutableAssetsPreset uses the immutable cache-control value, detaching HTML-specific headers by default', () => {
 		const p = immutableAssetsPreset();
-		expect(p.headers['Cache-Control']).toBe(
-			'public, max-age=31536000, immutable',
-		);
+		expect(p.headers['Cache-Control']).toEqual({
+			override: 'public, max-age=31536000, immutable',
+		});
+		expect(p.headers['Content-Security-Policy']).toEqual({ detach: true });
+		expect(p.headers['Permissions-Policy']).toEqual({ detach: true });
+		expect(p.headers['X-Frame-Options']).toEqual({ detach: true });
+	});
+
+	it('immutableAssetsPreset supports cleanHeaders opt-out', () => {
+		const p = immutableAssetsPreset('/assets/*', { cleanHeaders: false });
+		expect(p.headers['Cache-Control']).toEqual({
+			override: 'public, max-age=31536000, immutable',
+		});
+		expect(p.headers['Content-Security-Policy']).toBeUndefined();
+		expect(p.headers['Permissions-Policy']).toBeUndefined();
+		expect(p.headers['X-Frame-Options']).toBeUndefined();
 	});
 
 	it('securityHeadersPreset sets the baseline hardening headers', () => {
@@ -183,12 +199,12 @@ describe('presets', () => {
 		expect(p.headers['Cross-Origin-Embedder-Policy']).toBeUndefined();
 	});
 
-	it('dynamicContentPreset sets no-store caching headers', () => {
+	it('dynamicContentPreset sets no-store caching headers as overrides', () => {
 		const p = dynamicContentPreset();
 		expect(p.path).toBe('/*');
-		expect(p.headers['Cache-Control']).toBe(
-			'no-cache, no-store, must-revalidate',
-		);
+		expect(p.headers['Cache-Control']).toEqual({
+			override: 'no-cache, no-store, must-revalidate',
+		});
 	});
 
 	it('securityHeadersPreset supports custom HSTS config', () => {

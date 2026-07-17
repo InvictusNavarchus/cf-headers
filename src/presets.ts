@@ -83,7 +83,10 @@ export function corsPreset(path: string): HeaderRule {
 	return {
 		path,
 		comment: 'Allow cross-origin fetches of these assets.',
-		headers: { 'Access-Control-Allow-Origin': '*' },
+		headers: {
+			'Access-Control-Allow-Origin': { override: '*' },
+			'Cross-Origin-Resource-Policy': { override: 'cross-origin' },
+		},
 	};
 }
 
@@ -137,14 +140,34 @@ export function noIndexPreviewDomainPreset(
 	];
 }
 
+/** Options to customize the immutable assets preset. */
+export interface ImmutableAssetsPresetOptions {
+	/** Detach HTML-specific headers like CSP, Permissions-Policy, and X-Frame-Options to reduce header bloat. Defaults to `true`. */
+	cleanHeaders?: boolean;
+}
+
 /** Long-lived, immutable caching for content-hashed build output
  * (e.g. Vite/webpack's fingerprinted `/assets/*` files). */
-export function immutableAssetsPreset(path = '/assets/*'): HeaderRule {
+export function immutableAssetsPreset(
+	path = '/assets/*',
+	options: ImmutableAssetsPresetOptions = {},
+): HeaderRule {
+	const clean = options.cleanHeaders ?? true;
+	const headers: HeaderRule['headers'] = {
+		'Cache-Control': { override: immutableAssetCacheControl() },
+	};
+
+	if (clean) {
+		headers['Content-Security-Policy'] = { detach: true };
+		headers['Permissions-Policy'] = { detach: true };
+		headers['X-Frame-Options'] = { detach: true };
+	}
+
 	return {
 		path,
 		comment:
 			'Fingerprinted assets never change contents for a given URL — cache aggressively.',
-		headers: { 'Cache-Control': immutableAssetCacheControl() },
+		headers,
 	};
 }
 
@@ -154,7 +177,7 @@ export function dynamicContentPreset(path = '/*'): HeaderRule {
 	return {
 		path,
 		comment: 'Do not cache HTML entry points or dynamic content.',
-		headers: { 'Cache-Control': noStoreCacheControl() },
+		headers: { 'Cache-Control': { override: noStoreCacheControl() } },
 	};
 }
 

@@ -89,6 +89,7 @@ export type {
 	HstsOptions,
 	NoIndexPresetOptions,
 	SecurityHeadersPresetOptions,
+	ImmutableAssetsPresetOptions,
 } from './presets.js';
 
 /**
