@@ -1,9 +1,3 @@
-export type {
-	HeaderCategory,
-	HeaderContext,
-	HeaderInfo,
-	HeaderStatus,
-} from './registry.js';
 import type { KnownHeaderName } from './registry.js';
 import type { HeaderValueFor } from './header-values.js';
 

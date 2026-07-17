@@ -14,7 +14,7 @@ function isDetach(value: HeaderDirective): value is { detach: true } {
 	);
 }
 
-export function isOverride(value: HeaderDirective): value is OverrideHeader {
+function isOverride(value: HeaderDirective): value is OverrideHeader {
 	return typeof value === 'object' && value !== null && 'override' in value;
 }
 
