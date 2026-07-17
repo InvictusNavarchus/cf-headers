@@ -180,6 +180,12 @@ securityHeadersPreset("/*", {
   // Select a CSP preset ('compatible' | 'strict'), pass CspOptions (merges onto 'compatible'), or false to omit
   csp: "compatible", // default
   
+  // Or: merge custom overrides directly onto the default 'compatible' preset:
+  // csp: { connectSrc: ["'self'", "https://api.example.com"] },
+
+  // Or: use the strict preset with custom overrides:
+  // csp: { preset: "strict", overrides: { imgSrc: ["'self'", "data:"] } },
+  
   // Custom HSTS config or false to disable
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   

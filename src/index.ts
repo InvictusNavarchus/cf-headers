@@ -90,6 +90,7 @@ export type {
 	NoIndexPresetOptions,
 	SecurityHeadersPresetOptions,
 	ImmutableAssetsPresetOptions,
+	CspPresetName,
 } from './presets.js';
 
 /**
