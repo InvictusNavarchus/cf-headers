@@ -155,9 +155,7 @@ permissionsPolicy({ camera: [], geolocation: ["self"] });
 // "camera=(), geolocation=(self)"
 ```
 
-Each builder validates itself, e.g. `cacheControl({ public: true, private: true })`
-throws immediately (`public` and `private` are mutually exclusive) instead of
-silently emitting a nonsensical header.
+Invalid directive combinations (such as specifying both `public` and `private`, or `no-store` alongside `max-age` in `Cache-Control`) are caught by the build validator (`validateConfig`) rather than silently emitting nonsensical headers into your `_headers` output.
 
 ## Presets
 
@@ -219,6 +217,8 @@ Every build validates against Cloudflare's documented constraints and fails
 - any rendered line over 2000 characters
 - absolute URLs that aren't `https://` or that specify a port
 - more than one `*` splat in a path
+- conflicting or invalid header directives (e.g. `public` and `private` together in `Cache-Control`, or `no-store` combined with `max-age`)
+- invalid `Permissions-Policy` syntax (e.g. single quotes, or invalid keywords like `none` and `src`)
 
 It also issues **warnings** on:
 - deprecated or non-standard headers
