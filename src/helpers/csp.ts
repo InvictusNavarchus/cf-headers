@@ -125,3 +125,24 @@ export function strictCsp(overrides: CspOptions = {}): string {
 		...overrides,
 	});
 }
+
+/** A permissive starting point for sites requiring inline scripts:
+ * same-origin assets, inline scripts and styles allowed, data: and blob: URLs
+ * for images/fonts/workers. */
+export function permissiveCsp(overrides: CspOptions = {}): string {
+	return csp({
+		defaultSrc: ["'self'"],
+		scriptSrc: ["'self'", "'unsafe-inline'"],
+		styleSrc: ["'self'", "'unsafe-inline'"],
+		imgSrc: ["'self'", 'data:', 'blob:'],
+		fontSrc: ["'self'", 'data:'],
+		connectSrc: ["'self'"],
+		workerSrc: ["'self'", 'blob:'],
+		objectSrc: ["'none'"],
+		frameAncestors: ["'none'"],
+		formAction: ["'self'"],
+		baseUri: ["'self'"],
+		upgradeInsecureRequests: true,
+		...overrides,
+	});
+}

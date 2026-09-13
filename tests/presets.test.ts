@@ -5,7 +5,12 @@ import {
 	noCacheControl,
 	noStoreCacheControl,
 } from '../src/helpers/cache-control.js';
-import { csp, strictCsp, compatibleCsp } from '../src/helpers/csp.js';
+import {
+	csp,
+	strictCsp,
+	compatibleCsp,
+	permissiveCsp,
+} from '../src/helpers/csp.js';
 import {
 	lockedDownPermissionsPolicy,
 	permissionsPolicy,
@@ -106,6 +111,12 @@ describe('csp', () => {
 	it('compatibleCsp() produces a reasonable, compatible baseline for SPAs', () => {
 		expect(compatibleCsp()).toBe(
 			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests",
+		);
+	});
+
+	it('permissiveCsp() produces a permissive baseline allowing inline scripts', () => {
+		expect(permissiveCsp()).toBe(
+			"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests",
 		);
 	});
 
@@ -306,6 +317,11 @@ describe('presets', () => {
 		const pStrict = securityHeadersPreset('/*', { csp: 'strict' });
 		expect(pStrict.headers['Content-Security-Policy']).toBe(strictCsp());
 
+		const pPermissive = securityHeadersPreset('/*', { csp: 'permissive' });
+		expect(pPermissive.headers['Content-Security-Policy']).toBe(
+			permissiveCsp(),
+		);
+
 		const pOverride = securityHeadersPreset('/*', {
 			csp: { connectSrc: ["'self'", 'https://api.example.com'] },
 		});
@@ -321,6 +337,16 @@ describe('presets', () => {
 		});
 		expect(pPresetOverride.headers['Content-Security-Policy']).toBe(
 			strictCsp({ scriptSrc: ["'self'", 'https://cdn.example.com'] }),
+		);
+
+		const pPermissivePresetOverride = securityHeadersPreset('/*', {
+			csp: {
+				preset: 'permissive',
+				overrides: { connectSrc: ["'self'", 'https://api.example.com'] },
+			},
+		});
+		expect(pPermissivePresetOverride.headers['Content-Security-Policy']).toBe(
+			permissiveCsp({ connectSrc: ["'self'", 'https://api.example.com'] }),
 		);
 
 		const pDisable = securityHeadersPreset('/*', { csp: false });

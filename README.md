@@ -138,7 +138,14 @@ A handful of headers with a fixed vocabulary get a real literal-union type
 to get subtly wrong as hand-rolled strings, so they get typed builders:
 
 ```ts
-import { cacheControl, csp, permissionsPolicy, compatibleCsp, strictCsp } from "@navarchus/cf-headers";
+import {
+  cacheControl,
+  csp,
+  permissionsPolicy,
+  compatibleCsp,
+  strictCsp,
+  permissiveCsp,
+} from "@navarchus/cf-headers";
 
 cacheControl({ public: true, maxAge: 31536000, immutable: true });
 // "public, max-age=31536000, immutable"
@@ -150,6 +157,7 @@ csp({ defaultSrc: ["'self'"], scriptSrc: ["'self'", "https://cdn.example.com"] }
 // High-level CSP presets:
 compatibleCsp(); // Practical SPA-friendly CSP (style-src 'unsafe-inline', data/blob URLs)
 strictCsp();     // High-security lockdown for fully self-contained static sites
+permissiveCsp(); // Permissive baseline allowing inline scripts for framework hydration
 
 permissionsPolicy({ camera: [], geolocation: ["self"] });
 // "camera=(), geolocation=(self)"
@@ -185,14 +193,19 @@ Calling `securityHeadersPreset()` with no arguments applies the following produc
 | `Permissions-Policy` | Camera, mic, geo, etc. `()` | Disables invasive sensors by default (`camera=(), geolocation=(), ...`). |
 | `Content-Security-Policy` | `compatible` preset | SPA-friendly CSP baseline (see below). |
 
-#### Understanding the CSP Baselines (`compatible` vs `strict`)
+#### Understanding the CSP Baselines (`strict` vs `compatible` vs `permissive`)
 
-Content-Security-Policy is the header most prone to breaking single-page apps. `cf-headers` ships with two presets:
+Content-Security-Policy is the header most prone to breaking single-page and meta-framework apps. `cf-headers` ships with three presets tailored to different security and architectural needs:
 
-- **`compatible` (Default)**: Tailored for modern frontend frameworks (Vite, Astro, SvelteKit, Next/Nuxt SSG).
+- **`compatible` (Default)**: Tailored for modern SPAs and build tools (Vite, React, Vue, Solid, Svelte SPA) where client scripts are bundled into external chunks or use SHA hashes.
   - ✅ **Allowed**: Same-origin scripts, styles, and workers; inline styles (`'unsafe-inline'`); `data:` and `blob:` URIs for images, fonts, and web workers.
-  - ❌ **Blocked**: External domains (APIs, CDNs, fonts, analytics); `eval()`; Flash/plugins (`object-src 'none'`); framing (`frame-ancestors 'none'`).
-- **`strict`**: High-security lockdown for zero-inline, fully self-contained static sites (disallows `'unsafe-inline'` and `data:`/`blob:` URIs).
+  - ❌ **Blocked**: External domains (APIs, CDNs, fonts, analytics); inline scripts (`'unsafe-inline'`); `eval()`; plugins (`object-src 'none'`); framing (`frame-ancestors 'none'`).
+- **`strict`**: High-security lockdown for zero-inline, fully self-contained static sites (disallows `'unsafe-inline'` everywhere and `data:`/`blob:` URIs).
+- **`permissive`**: For meta-frameworks with unhashed inline hydration or bootstrap scripts (e.g., Astro components using `<script is:inline>`, SvelteKit without hash generation, or Nuxt SSG).
+  - ✅ **Allowed**: Same-origin and inline scripts (`'unsafe-inline'`), inline styles (`'unsafe-inline'`), `data:` and `blob:` URIs for images/fonts/workers.
+  - ⚠️ **Trade-off**: Allowing `'unsafe-inline'` on `script-src` relaxes browser-level XSS mitigation. Whenever possible, prefer `compatible` with external scripts or framework-level SHA hashing.
+
+> **Tip for Meta-Frameworks (SvelteKit / Astro):** If your build outputs inline bootstrap scripts that cause CSP console errors, you can either switch CSP to the permissive preset (`securityHeadersPreset("/*", { csp: "permissive" })`) or enable native hash generation in your framework (e.g. `kit.csp.mode = "hash"` in `svelte.config.js`).
 
 #### Customizing Security Headers
 

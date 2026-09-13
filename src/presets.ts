@@ -2,7 +2,12 @@ import {
 	immutableAssetCacheControl,
 	noStoreCacheControl,
 } from './helpers/cache-control.js';
-import { strictCsp, compatibleCsp, type CspOptions } from './helpers/csp.js';
+import {
+	strictCsp,
+	compatibleCsp,
+	permissiveCsp,
+	type CspOptions,
+} from './helpers/csp.js';
 import {
 	lockedDownPermissionsPolicy,
 	type PermissionsPolicyOptions,
@@ -27,7 +32,7 @@ export interface HstsOptions {
 	preload?: boolean;
 }
 
-export type CspPresetName = 'compatible' | 'strict';
+export type CspPresetName = 'compatible' | 'strict' | 'permissive';
 
 /** Options to customize the default security headers preset. */
 export interface SecurityHeadersPresetOptions {
@@ -250,12 +255,19 @@ function resolveCsp(
 	if (opt === 'strict') {
 		return strictCsp({});
 	}
+	if (opt === 'permissive') {
+		return permissiveCsp({});
+	}
 	if (typeof opt === 'object') {
 		if ('preset' in opt) {
 			const config = opt as { preset: CspPresetName; overrides?: CspOptions };
-			return config.preset === 'strict'
-				? strictCsp(config.overrides ?? {})
-				: compatibleCsp(config.overrides ?? {});
+			if (config.preset === 'strict') {
+				return strictCsp(config.overrides ?? {});
+			}
+			if (config.preset === 'permissive') {
+				return permissiveCsp(config.overrides ?? {});
+			}
+			return compatibleCsp(config.overrides ?? {});
 		}
 		return compatibleCsp(opt);
 	}
