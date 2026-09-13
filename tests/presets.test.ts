@@ -8,7 +8,7 @@ import {
 import {
 	csp,
 	strictCsp,
-	compatibleCsp,
+	standardCsp,
 	permissiveCsp,
 } from '../src/helpers/csp.js';
 import {
@@ -108,8 +108,8 @@ describe('csp', () => {
 		);
 	});
 
-	it('compatibleCsp() produces a reasonable, compatible baseline for SPAs', () => {
-		expect(compatibleCsp()).toBe(
+	it('standardCsp() produces a reasonable, standard baseline for SPAs', () => {
+		expect(standardCsp()).toBe(
 			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; upgrade-insecure-requests",
 		);
 	});
@@ -309,10 +309,10 @@ describe('presets', () => {
 
 	it('securityHeadersPreset supports custom CSP presets, overrides, and disabling', () => {
 		const pDefault = securityHeadersPreset();
-		expect(pDefault.headers['Content-Security-Policy']).toBe(compatibleCsp());
+		expect(pDefault.headers['Content-Security-Policy']).toBe(standardCsp());
 
-		const pComp = securityHeadersPreset('/*', { csp: 'compatible' });
-		expect(pComp.headers['Content-Security-Policy']).toBe(compatibleCsp());
+		const pStd = securityHeadersPreset('/*', { csp: 'standard' });
+		expect(pStd.headers['Content-Security-Policy']).toBe(standardCsp());
 
 		const pStrict = securityHeadersPreset('/*', { csp: 'strict' });
 		expect(pStrict.headers['Content-Security-Policy']).toBe(strictCsp());
@@ -326,7 +326,7 @@ describe('presets', () => {
 			csp: { connectSrc: ["'self'", 'https://api.example.com'] },
 		});
 		expect(pOverride.headers['Content-Security-Policy']).toBe(
-			compatibleCsp({ connectSrc: ["'self'", 'https://api.example.com'] }),
+			standardCsp({ connectSrc: ["'self'", 'https://api.example.com'] }),
 		);
 
 		const pPresetOverride = securityHeadersPreset('/*', {

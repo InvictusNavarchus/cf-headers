@@ -4,7 +4,7 @@ import {
 } from './helpers/cache-control.js';
 import {
 	strictCsp,
-	compatibleCsp,
+	standardCsp,
 	permissiveCsp,
 	type CspOptions,
 } from './helpers/csp.js';
@@ -32,13 +32,13 @@ export interface HstsOptions {
 	preload?: boolean;
 }
 
-export type CspPresetName = 'compatible' | 'strict' | 'permissive';
+export type CspPresetName = 'strict' | 'standard' | 'permissive';
 
 /** Options to customize the default security headers preset. */
 export interface SecurityHeadersPresetOptions {
 	/**
 	 * Configures Content-Security-Policy (CSP). Pass `false` to disable.
-	 * Defaults to `'compatible'` (allows same-origin JS/assets and inline styles).
+	 * Defaults to `'standard'` (allows same-origin JS/assets and inline styles).
 	 */
 	csp?:
 		| CspPresetName
@@ -249,8 +249,8 @@ function resolveCsp(
 		| false,
 ): string | undefined {
 	if (opt === false) return undefined;
-	if (opt === undefined || opt === 'compatible') {
-		return compatibleCsp({});
+	if (opt === undefined || opt === 'standard') {
+		return standardCsp({});
 	}
 	if (opt === 'strict') {
 		return strictCsp({});
@@ -267,9 +267,9 @@ function resolveCsp(
 			if (config.preset === 'permissive') {
 				return permissiveCsp(config.overrides ?? {});
 			}
-			return compatibleCsp(config.overrides ?? {});
+			return standardCsp(config.overrides ?? {});
 		}
-		return compatibleCsp(opt);
+		return standardCsp(opt);
 	}
 	return undefined;
 }

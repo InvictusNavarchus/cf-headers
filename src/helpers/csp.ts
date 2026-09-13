@@ -85,9 +85,9 @@ export function csp(options: CspOptions): string {
 	return parts.join('; ');
 }
 
-/** A reasonable, compatible starting point for modern SPAs: same-origin assets,
+/** A reasonable, standard starting point for modern SPAs: same-origin assets,
  * inline styles allowed, data: and blob: URLs for images/fonts/workers. */
-export function compatibleCsp(overrides: CspOptions = {}): string {
+export function standardCsp(overrides: CspOptions = {}): string {
 	return csp({
 		defaultSrc: ["'self'"],
 		scriptSrc: ["'self'"],

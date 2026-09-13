@@ -142,7 +142,7 @@ import {
   cacheControl,
   csp,
   permissionsPolicy,
-  compatibleCsp,
+  standardCsp,
   strictCsp,
   permissiveCsp,
 } from "@navarchus/cf-headers";
@@ -155,7 +155,7 @@ csp({ defaultSrc: ["'self'"], scriptSrc: ["'self'", "https://cdn.example.com"] }
 // "default-src 'self'; script-src 'self' https://cdn.example.com"
 
 // High-level CSP presets:
-compatibleCsp(); // Practical SPA-friendly CSP (style-src 'unsafe-inline', data/blob URLs)
+standardCsp();   // Practical SPA-friendly CSP (style-src 'unsafe-inline', data/blob URLs)
 strictCsp();     // High-security lockdown for fully self-contained static sites
 permissiveCsp(); // Permissive baseline allowing inline scripts for framework hydration
 
@@ -171,7 +171,7 @@ Ready-made rules for common production scenarios. Defaults are tuned to match Cl
 
 | Preset | Default Path | What it does |
 |---|---|---|
-| `securityHeadersPreset(path?, options?)` | `/*` | Full baseline hardening: CSP (`compatible`), HSTS (1 yr), `nosniff`, `DENY`, COOP, CORP, and locked down Permissions-Policy. |
+| `securityHeadersPreset(path?, options?)` | `/*` | Full baseline hardening: CSP (`standard`), HSTS (1 yr), `nosniff`, `DENY`, COOP, CORP, and locked down Permissions-Policy. |
 | `dynamicContentPreset(path?)` | `/*` | Overrides `Cache-Control` to `no-cache, no-store, must-revalidate` for dynamic/API routes. |
 | `immutableAssetsPreset(path?, options?)` | `/assets/*` | Overrides `Cache-Control` to `immutable` caching, and by default detaches HTML-specific headers (CSP, Permissions-Policy, X-Frame-Options) to minimize overhead. |
 | `corsPreset(path)` | *(required)* | Overrides CORS origin to `*` and CORP to `cross-origin` for static assets like fonts or shared public files. |
@@ -191,19 +191,19 @@ Calling `securityHeadersPreset()` with no arguments applies the following produc
 | `Cross-Origin-Resource-Policy` | `same-origin` | Blocks other sites from embedding your resources. |
 | `Cross-Origin-Embedder-Policy` | *(omitted)* | Disabled by default to avoid breaking third-party embeds (Stripe, YouTube, etc.). |
 | `Permissions-Policy` | Camera, mic, geo, etc. `()` | Disables invasive sensors by default (`camera=(), geolocation=(), ...`). |
-| `Content-Security-Policy` | `compatible` preset | SPA-friendly CSP baseline (see below). |
+| `Content-Security-Policy` | `standard` preset | SPA-friendly CSP baseline (see below). |
 
-#### Understanding the CSP Baselines (`strict` vs `compatible` vs `permissive`)
+#### Understanding the CSP Baselines (`strict` vs `standard` vs `permissive`)
 
 Content-Security-Policy is the header most prone to breaking single-page and meta-framework apps. `cf-headers` ships with three presets tailored to different security and architectural needs:
 
-- **`compatible` (Default)**: Tailored for modern SPAs and build tools (Vite, React, Vue, Solid, Svelte SPA) where client scripts are bundled into external chunks or use SHA hashes.
+- **`standard` (Default)**: Tailored for modern SPAs and build tools (Vite, React, Vue, Solid, Svelte SPA) where client scripts are bundled into external chunks or use SHA hashes.
   - ✅ **Allowed**: Same-origin scripts, styles, and workers; inline styles (`'unsafe-inline'`); `data:` and `blob:` URIs for images, fonts, and web workers.
   - ❌ **Blocked**: External domains (APIs, CDNs, fonts, analytics); inline scripts (`'unsafe-inline'`); `eval()`; plugins (`object-src 'none'`); framing (`frame-ancestors 'none'`).
 - **`strict`**: High-security lockdown for zero-inline, fully self-contained static sites (disallows `'unsafe-inline'` everywhere and `data:`/`blob:` URIs).
 - **`permissive`**: For meta-frameworks with unhashed inline hydration or bootstrap scripts (e.g., Astro components using `<script is:inline>`, SvelteKit without hash generation, or Nuxt SSG).
   - ✅ **Allowed**: Same-origin and inline scripts (`'unsafe-inline'`), inline styles (`'unsafe-inline'`), `data:` and `blob:` URIs for images/fonts/workers.
-  - ⚠️ **Trade-off**: Allowing `'unsafe-inline'` on `script-src` relaxes browser-level XSS mitigation. Whenever possible, prefer `compatible` with external scripts or framework-level SHA hashing.
+  - ⚠️ **Trade-off**: Allowing `'unsafe-inline'` on `script-src` relaxes browser-level XSS mitigation. Whenever possible, prefer `standard` with external scripts or framework-level SHA hashing.
 
 > **Tip for Meta-Frameworks (SvelteKit / Astro):** If your build outputs inline bootstrap scripts that cause CSP console errors, you can either switch CSP to the permissive preset (`securityHeadersPreset("/*", { csp: "permissive" })`) or enable native hash generation in your framework (e.g. `kit.csp.mode = "hash"` in `svelte.config.js`).
 
@@ -215,7 +215,7 @@ You can customize individual headers, extend the CSP, or disable headers entirel
 import { securityHeadersPreset } from "@navarchus/cf-headers";
 
 securityHeadersPreset("/*", {
-  // 1. Extend the compatible CSP baseline for external APIs, fonts, or CDNs:
+  // 1. Extend the standard CSP baseline for external APIs, fonts, or CDNs:
   csp: {
     connectSrc: ["'self'", "https://api.example.com", "https://*.sentry.io"],
     fontSrc: ["'self'", "https://fonts.gstatic.com"],

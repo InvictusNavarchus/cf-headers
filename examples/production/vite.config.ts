@@ -21,7 +21,7 @@ export default defineConfig({
 						includeSubDomains: true,
 						preload: true,
 					},
-					// Customizes CSP by overriding specific directives on top of the default 'compatible' preset
+					// Customizes CSP by overriding specific directives on top of the default 'standard' preset
 					csp: {
 						scriptSrc: [
 							"'self'",
