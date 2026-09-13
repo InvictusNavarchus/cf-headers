@@ -159,43 +159,108 @@ Invalid directive combinations (such as specifying both `public` and `private`, 
 
 ## Presets
 
-Ready-made rules for the scenarios that come up on nearly every project:
+Ready-made rules for common production scenarios. Defaults are tuned to match Cloudflare's best practices without breaking modern SPA build tools:
 
-| Preset | What it does |
-|---|---|
-| `securityHeadersPreset(path?, options?)` | `nosniff`, CSP, HSTS, Permissions-Policy, Referrer-Policy, and secure COOP/CORP defaults. |
-| `dynamicContentPreset(path?)` | Overrides `Cache-Control` to `no-cache, no-store, must-revalidate` for dynamic routes. |
-| `immutableAssetsPreset(path?, options?)` | Overrides `Cache-Control` to `immutable` caching, and detaches HTML-specific headers (CSP, Permissions-Policy, X-Frame-Options) to avoid bloat. |
-| `corsPreset(path?)` | Overrides CORS origin to `*` and CORP to `cross-origin` to ensure static assets can be loaded cross-origin. |
-| `noIndexPreviewDomainPreset(options?)` | `X-Robots-Tag: noindex` on your `*.pages.dev`/`*.workers.dev` preview subdomain. |
+| Preset | Default Path | What it does |
+|---|---|---|
+| `securityHeadersPreset(path?, options?)` | `/*` | Full baseline hardening: CSP (`compatible`), HSTS (1 yr), `nosniff`, `DENY`, COOP, CORP, and locked down Permissions-Policy. |
+| `dynamicContentPreset(path?)` | `/*` | Overrides `Cache-Control` to `no-cache, no-store, must-revalidate` for dynamic/API routes. |
+| `immutableAssetsPreset(path?, options?)` | `/assets/*` | Overrides `Cache-Control` to `immutable` caching, and by default detaches HTML-specific headers (CSP, Permissions-Policy, X-Frame-Options) to minimize overhead. |
+| `corsPreset(path)` | *(required)* | Overrides CORS origin to `*` and CORP to `cross-origin` for static assets like fonts or shared public files. |
+| `noIndexPreviewDomainPreset(options?)` | Pages / Workers hosts | Injects `X-Robots-Tag: noindex` on `*.pages.dev` or `*.workers.dev` preview subdomains so only your custom domain gets indexed. |
 
-### Security Headers Customization
+### Security Headers Preset
 
-The `securityHeadersPreset` offers deep customization. Most values can be customized or disabled entirely by passing `false`:
+Calling `securityHeadersPreset()` with no arguments applies the following production baseline:
+
+| Header | Default Value | Notes |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing. |
+| `X-Frame-Options` | `DENY` | Prevents clickjacking by blocking iframe embedding. |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Protects sensitive path/query data across origins. |
+| `Strict-Transport-Security` | `max-age=31536000` | 1-year HSTS. Preload/subdomains configurable. |
+| `Cross-Origin-Opener-Policy` | `same-origin` | Isolates browsing context from popups/openers. |
+| `Cross-Origin-Resource-Policy` | `same-origin` | Blocks other sites from embedding your resources. |
+| `Cross-Origin-Embedder-Policy` | *(omitted)* | Disabled by default to avoid breaking third-party embeds (Stripe, YouTube, etc.). |
+| `Permissions-Policy` | Camera, mic, geo, etc. `()` | Disables invasive sensors by default (`camera=(), geolocation=(), ...`). |
+| `Content-Security-Policy` | `compatible` preset | SPA-friendly CSP baseline (see below). |
+
+#### Understanding the CSP Baselines (`compatible` vs `strict`)
+
+Content-Security-Policy is the header most prone to breaking single-page apps. `cf-headers` ships with two presets:
+
+- **`compatible` (Default)**: Tailored for modern frontend frameworks (Vite, Astro, SvelteKit, Next/Nuxt SSG).
+  - ✅ **Allowed**: Same-origin scripts, styles, and workers; inline styles (`'unsafe-inline'`); `data:` and `blob:` URIs for images, fonts, and web workers.
+  - ❌ **Blocked**: External domains (APIs, CDNs, fonts, analytics); `eval()`; Flash/plugins (`object-src 'none'`); framing (`frame-ancestors 'none'`).
+- **`strict`**: High-security lockdown for zero-inline, fully self-contained static sites (disallows `'unsafe-inline'` and `data:`/`blob:` URIs).
+
+#### Customizing Security Headers
+
+You can customize individual headers, extend the CSP, or disable headers entirely by passing `false`:
 
 ```ts
-securityHeadersPreset("/*", {
-  // Select a CSP preset ('compatible' | 'strict'), pass CspOptions (merges onto 'compatible'), or false to omit
-  csp: "compatible", // default
-  
-  // Or: merge custom overrides directly onto the default 'compatible' preset:
-  // csp: { connectSrc: ["'self'", "https://api.example.com"] },
+import { securityHeadersPreset } from "@navarchus/cf-headers";
 
-  // Or: use the strict preset with custom overrides:
-  // csp: { preset: "strict", overrides: { imgSrc: ["'self'", "data:"] } },
-  
-  // Custom HSTS config or false to disable
+securityHeadersPreset("/*", {
+  // 1. Extend the compatible CSP baseline for external APIs, fonts, or CDNs:
+  csp: {
+    connectSrc: ["'self'", "https://api.example.com", "https://*.sentry.io"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    imgSrc: ["'self'", "data:", "blob:", "https://images.unsplash.com"],
+  },
+
+  // Or switch to strict CSP with overrides:
+  // csp: { preset: "strict", overrides: { scriptSrc: ["'self'", "https://cdn.example.com"] } },
+
+  // 2. Custom HSTS (preload enforces includeSubDomains and maxAge >= 1 year):
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-  
-  // Disable specific headers entirely if handled elsewhere
-  permissions: false,
+
+  // 3. Selectively allow specific Permissions-Policy features:
+  permissions: {
+    camera: ["self"], // allow same-origin camera while keeping others blocked
+    geolocation: ["self", "https://maps.example.com"],
+  },
+
+  // 4. Adjust framing or cross-origin policies:
+  xFrameOptions: "SAMEORIGIN", // or false to omit
+  coop: "same-origin-allow-popups",
+  coep: "credentialless", // enable COEP without breaking third-party subresources
+  corp: "cross-origin",
+
+  // 5. Disable individual headers completely if handled elsewhere:
   referrerPolicy: false,
   xContentTypeOptions: false,
-  xFrameOptions: false,
-  coop: false,
-  coep: false,
-  corp: false,
 });
+```
+
+### Other Preset Options
+
+#### `immutableAssetsPreset(path?, options?)`
+Defaults to `/assets/*`. By default (`cleanHeaders: true`), it strips HTML-specific headers (`CSP`, `Permissions-Policy`, `X-Frame-Options`) that are unnecessary on immutable static chunks, saving response bandwidth. Pass `{ cleanHeaders: false }` to keep them:
+
+```ts
+immutableAssetsPreset("/assets/*", { cleanHeaders: false });
+```
+
+#### `noIndexPreviewDomainPreset(options?)`
+Prevents preview domains from being crawled by search engines. Defaults to Cloudflare Pages (`*.pages.dev`). Specify `{ platform: 'workers' }` for Workers static assets (`*.workers.dev`):
+
+```ts
+// Returns HeaderRule[]:
+noIndexPreviewDomainPreset({ platform: "workers" });
+```
+
+#### `corsPreset(path)`
+A quick way to enable permissive cross-origin fetching for public fonts or static assets:
+
+```ts
+corsPreset("/fonts/*");
+// Renders:
+// /fonts/*
+//   ! Access-Control-Allow-Origin
+//   Access-Control-Allow-Origin: *
+//   ! Cross-Origin-Resource-Policy
+//   Cross-Origin-Resource-Policy: cross-origin
 ```
 
 
